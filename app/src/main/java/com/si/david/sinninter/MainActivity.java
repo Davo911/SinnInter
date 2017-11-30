@@ -94,10 +94,12 @@ public class MainActivity extends AppCompatActivity
             fragmentTransaction.commit();
 
         } else if (id == R.id.nav_map) {
+            /*
             MapFragment fragment = new MapFragment();
             FragmentTransaction fragmentTransaction = android.app.Fragment.
             fragmentTransaction.replace(R.id.fragment_container,fragment);
             fragmentTransaction.commit();
+            */
         } else if (id == R.id.nav_news) {
 
         } else if (id == R.id.nav_manage) {

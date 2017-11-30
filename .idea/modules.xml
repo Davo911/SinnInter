@@ -3,9 +3,7 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/SinnInter.iml" filepath="$PROJECT_DIR$/SinnInter.iml" />
-      <module fileurl="file://C:\Users\Dave\Documents\GitHub\SinnInter\SinnInter.iml" filepath="C:\Users\Dave\Documents\GitHub\SinnInter\SinnInter.iml" />
       <module fileurl="file://$PROJECT_DIR$/app/app.iml" filepath="$PROJECT_DIR$/app/app.iml" />
-      <module fileurl="file://C:\Users\Dave\Documents\GitHub\SinnInter\app\app.iml" filepath="C:\Users\Dave\Documents\GitHub\SinnInter\app\app.iml" />
     </modules>
   </component>
 </project>
