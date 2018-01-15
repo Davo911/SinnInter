@@ -1,12 +1,25 @@
 package com.si.david.sinninter;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
+import android.content.res.Configuration;
 import android.net.Uri;
 import android.os.Bundle;
+import android.support.design.widget.TabLayout;
 import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentManager;
+import android.support.v4.app.FragmentPagerAdapter;
+import android.support.v4.view.ViewPager;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+
+import com.google.android.gms.maps.CameraUpdateFactory;
+import com.google.android.gms.maps.GoogleMap;
+import com.google.android.gms.maps.MapView;
+import com.google.android.gms.maps.MapsInitializer;
+import com.google.android.gms.maps.model.CameraPosition;
+import com.google.android.gms.maps.model.LatLng;
 
 
 /**
@@ -17,54 +30,88 @@ import android.view.ViewGroup;
  * Use the {@link MapFragment#newInstance} factory method to
  * create an instance of this fragment.
  */
-public class MapFragment extends Fragment {
-    // TODO: Rename parameter arguments, choose names that match
-    // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
-    private static final String ARG_PARAM1 = "param1";
-    private static final String ARG_PARAM2 = "param2";
+public class MapFragment extends Fragment
+{
 
-    // TODO: Rename and change types of parameters
-    private String mParam1;
-    private String mParam2;
+    MapView mapView;
+    GoogleMap googleMap;
+    ViewPager viewPager;
+    LocationsPageAdapter pageAdapter;
+    OnFragmentInteractionListener mListener;
 
-    private OnFragmentInteractionListener mListener;
 
-    public MapFragment() {
-        // Required empty public constructor
-    }
+    class LocationsPageAdapter extends FragmentPagerAdapter
+    {
 
-    /**
-     * Use this factory method to create a new instance of
-     * this fragment using the provided parameters.
-     *
-     * @param param1 Parameter 1.
-     * @param param2 Parameter 2.
-     * @return A new instance of fragment MapFragment.
-     */
-    // TODO: Rename and change types and number of parameters
-    public static MapFragment newInstance(String param1, String param2) {
-        MapFragment fragment = new MapFragment();
-        Bundle args = new Bundle();
-        args.putString(ARG_PARAM1, param1);
-        args.putString(ARG_PARAM2, param2);
-        fragment.setArguments(args);
-        return fragment;
-    }
+        public LocationsPageAdapter(FragmentManager fm)
+        {
+            super(fm);
+        }
 
-    @Override
-    public void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        if (getArguments() != null) {
-            mParam1 = getArguments().getString(ARG_PARAM1);
-            mParam2 = getArguments().getString(ARG_PARAM2);
+
+        @Override
+        public Fragment getItem(int position)
+        {
+            return getLocationCard(position);
+        }
+
+        @Override
+        public int getCount()
+        {
+            //TODO: ersetzen mit Anzahl der locations
+            return 10;
         }
     }
 
+
+    public MapFragment()
+    {
+        // Required empty public constructor
+    }
+
+    public static MapFragment newInstance()
+    {
+        return new MapFragment();
+    }
+
+
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
-                             Bundle savedInstanceState) {
+                             Bundle savedInstanceState)
+    {
         // Inflate the layout for this fragment
-        return inflater.inflate(R.layout.fragment_map, container, false);
+        View view = inflater.inflate(R.layout.fragment_map, container, false);
+
+        viewPager = (ViewPager)view.findViewById(R.id.viewPager);
+        pageAdapter = new LocationsPageAdapter(getActivity().getSupportFragmentManager());
+        viewPager.setAdapter(pageAdapter);
+
+        TabLayout dots = (TabLayout)view.findViewById(R.id.dots);
+        dots.setupWithViewPager(viewPager, true);
+
+
+        mapView = (MapView) view.findViewById(R.id.mapView);
+        mapView.onCreate(savedInstanceState);
+
+
+        mapView.getMapAsync(mMap -> {
+            googleMap = mMap;
+
+            // For zooming automatically to the location of the marker
+            CameraPosition cameraPosition = new CameraPosition.Builder().target(new LatLng(51.050862, 13.733363)).zoom(12).build();
+            googleMap.animateCamera(CameraUpdateFactory.newCameraPosition(cameraPosition));
+        });
+
+
+        try
+        {
+            MapsInitializer.initialize(getActivity().getApplicationContext());
+        } catch (Exception e)
+        {
+            e.printStackTrace();
+        }
+
+        return view;
     }
 
     // TODO: Rename method, update argument and hook method into UI event
@@ -75,7 +122,65 @@ public class MapFragment extends Fragment {
     }
 
     @Override
-    public void onAttach(Context context) {
+    public void onConfigurationChanged (Configuration newConfig)
+    {
+        super.onConfigurationChanged(newConfig);
+    }
+
+    @Override
+    public void onCreate(Bundle savedInstanceState)
+    {
+        super.onCreate(savedInstanceState);
+        setRetainInstance(true);
+
+    }
+
+    @Override
+    public void onStart() {
+        super.onStart();
+        mapView.onStart();
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        mapView.onResume();
+    }
+
+    @Override
+    public void onPause() {
+        super.onPause();
+        mapView.onPause();
+    }
+
+    @Override
+    public void onStop() {
+        super.onStop();
+        mapView.onStop();
+    }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        mapView.onDestroy();
+    }
+
+    @Override
+    public void onLowMemory() {
+        super.onLowMemory();
+        mapView.onLowMemory();
+    }
+
+    @Override
+    public void onSaveInstanceState(Bundle state)
+    {
+        super.onSaveInstanceState(state);
+        mapView.onSaveInstanceState(state);
+    }
+
+    @Override
+    public void onAttach(Context context)
+    {
         super.onAttach(context);
         if (context instanceof OnFragmentInteractionListener) {
             mListener = (OnFragmentInteractionListener) context;
@@ -86,7 +191,8 @@ public class MapFragment extends Fragment {
     }
 
     @Override
-    public void onDetach() {
+    public void onDetach()
+    {
         super.onDetach();
         mListener = null;
     }
@@ -104,5 +210,21 @@ public class MapFragment extends Fragment {
     public interface OnFragmentInteractionListener {
         // TODO: Update argument type and name
         void onFragmentInteraction(Uri uri);
+    }
+
+    private Fragment getLocationCard(int num)
+    {
+        return new locatinCardPageFragment();
+    }
+
+    @SuppressLint("MissingPermission")
+    public void enableUserLocation()
+    {
+        if(googleMap != null)
+        {
+            googleMap.setMyLocationEnabled(true);
+            googleMap.getUiSettings().setMyLocationButtonEnabled(false);
+            googleMap.getUiSettings().setCompassEnabled(false);
+        }
     }
 }
