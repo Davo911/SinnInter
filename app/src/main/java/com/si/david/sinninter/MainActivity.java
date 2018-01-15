@@ -1,7 +1,7 @@
 package com.si.david.sinninter;
 
 import android.Manifest;
-import android.annotation.SuppressLint;
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Bundle;
@@ -20,6 +20,7 @@ import android.widget.ImageButton;
 
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
+import com.si.david.sinninter.arviewer.ArActivity;
 
 import java.util.Objects;
 
@@ -42,8 +43,6 @@ public class MainActivity extends AppCompatActivity
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-
-
         toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
         getSupportActionBar().hide();
@@ -63,6 +62,16 @@ public class MainActivity extends AppCompatActivity
         menuButton.setOnClickListener(view ->
         {
             drawer.openDrawer(GravityCompat.START);
+        });
+
+        ImageButton arButton = (ImageButton)findViewById(R.id.arButton);
+        arButton.setOnClickListener(view ->
+        {
+            //request permission to use camera
+            ActivityCompat.requestPermissions(this,
+                    new String[]{Manifest.permission.CAMERA, Manifest.permission.ACCESS_FINE_LOCATION}, 2);
+
+            //if permission is granted, the new Activity is started in the RequestPermissionResultCallback
         });
 
     }
@@ -172,9 +181,17 @@ public class MainActivity extends AppCompatActivity
                     grantResults[0] == PackageManager.PERMISSION_GRANTED)
             {
                 mapFragment.enableUserLocation();
-
-
+            }
+        }else if(requestCode == 2)
+        {
+            if (permissions.length == 2 &&
+                    grantResults[0] == PackageManager.PERMISSION_GRANTED &&
+                    grantResults[1] == PackageManager.PERMISSION_GRANTED)
+            {
+                Intent myIntent = new Intent(MainActivity.this, ArActivity.class);
+                startActivity(myIntent);
             }
         }
+
     }
 }
