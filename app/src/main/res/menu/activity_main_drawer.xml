@@ -8,31 +8,23 @@
             android:id="@+id/nav_unlocked"
             android:icon="@drawable/ic_lock_open"
             android:title="Unlocked" />
-        <item
-            android:id="@+id/nav_map"
-            android:icon="@drawable/ic_map"
-            android:title="Map" />
+
         <item
             android:id="@+id/nav_news"
             android:icon="@drawable/ic_public"
             android:title="News" />
         <item
             android:id="@+id/nav_manage"
-            android:icon="@drawable/ic_menu_manage"
-            android:title="Settings" />
+            android:icon="@drawable/ic_location_city"
+            android:title="Meine Stadt" />
+        <item
+            android:id="@+id/nav_map"
+            android:icon="@drawable/ic_map"
+            android:title="Map" />
+        <item
+            android:id="@+id/nav_send"
+            android:icon="@drawable/ic_date"
+            android:title="Kalender" />
     </group>
-
-    <item android:title="Communicate">
-        <menu>
-            <item
-                android:id="@+id/nav_share"
-                android:icon="@drawable/ic_menu_share"
-                android:title="Share" />
-            <item
-                android:id="@+id/nav_send"
-                android:icon="@drawable/ic_help_outline"
-                android:title="Help" />
-        </menu>
-    </item>
 
 </menu>
