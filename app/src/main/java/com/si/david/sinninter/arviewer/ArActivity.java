@@ -1,6 +1,7 @@
 package com.si.david.sinninter.arviewer;
 
 import android.annotation.SuppressLint;
+import android.content.pm.ActivityInfo;
 import android.graphics.BitmapFactory;
 import android.hardware.Camera;
 import android.hardware.Sensor;
@@ -48,6 +49,8 @@ public class ArActivity extends AppCompatActivity implements
     {
         super.onCreate(savedInstanceState);
 
+        setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_SENSOR_PORTRAIT);
+
         getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,
                 WindowManager.LayoutParams.FLAG_FULLSCREEN);
 
@@ -65,6 +68,7 @@ public class ArActivity extends AppCompatActivity implements
 
         //init camera preview
         camera = Camera.open();
+        camera.setDisplayOrientation(90);
         cameraPreview = new CameraView(getBaseContext(), camera);
         FrameLayout previewContainer = (FrameLayout) findViewById(R.id.camera_preview);
         previewContainer.addView(cameraPreview);
@@ -140,7 +144,6 @@ public class ArActivity extends AppCompatActivity implements
         //TODO: notify user
     }
 
-
     //SENSOR EVENTS
     @Override
     public void onSensorChanged(SensorEvent sensorEvent)
@@ -150,9 +153,6 @@ public class ArActivity extends AppCompatActivity implements
             //retrieve orientation vector
             float[] tmpRotMatrix = new float[16];
             SensorManager.getRotationMatrixFromVector(tmpRotMatrix, sensorEvent.values);
-
-            //remap vector to openGL coordinates
-            SensorManager.remapCoordinateSystem(tmpRotMatrix, SensorManager.AXIS_Y, SensorManager.AXIS_MINUS_X, tmpRotMatrix);
 
             //smooth out sensorData
             for (int i = 0; i < 16; i++)

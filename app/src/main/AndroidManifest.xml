@@ -31,7 +31,7 @@
             </intent-filter>
         </activity>
         <activity android:name=".arviewer.ArActivity"
-            android:screenOrientation="landscape"/>
+            android:screenOrientation="sensorPortrait"/>
     </application>
 
 </manifest>

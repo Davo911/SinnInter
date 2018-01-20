@@ -48,9 +48,7 @@ public class ArGLSurfaceView extends GLSurfaceView
     private final ConcurrentLinkedQueue<Model.ModelData> modelsToLoad = new ConcurrentLinkedQueue<Model.ModelData>();
     private final ConcurrentLinkedQueue<Double[]> arObjectPositions = new ConcurrentLinkedQueue<Double[]>();
 
-    Model model;
     Shader shader;
-    ARObject arObject;
 
 
     public ArGLSurfaceView(Context context)
@@ -174,8 +172,6 @@ public class ArGLSurfaceView extends GLSurfaceView
             GLES30.glEnable(GL_CULL_FACE);
             glCullFace(GL_BACK);
 
-            model = Model.fromOBJ(getResources().openRawResource(R.raw.spot));
-
             shader = new Shader(resourceToString(R.raw.vertex_shader), resourceToString(R.raw.fragment_shader),
                     new String[]{"position", "textureCoords", "normal"});
             shader.start();
@@ -196,10 +192,12 @@ public class ArGLSurfaceView extends GLSurfaceView
             {
                 CameraManager cManager = (CameraManager) getContext().getSystemService(CAMERA_SERVICE);
                 if(cManager != null)
-                    fov = getHFOV(cManager.getCameraCharacteristics(cManager.getCameraIdList()[0]));
+                    fov = getVFOV(cManager.getCameraCharacteristics(cManager.getCameraIdList()[0]));
+                //TODO:
+                fov = 35;
             }catch(CameraAccessException ex){ex.printStackTrace();}
 
-            projectionMatrix = shader.getProjectionMatrix(width, height, fov, 1f, 5000f);
+            projectionMatrix = shader.getProjectionMatrix(width, height, fov, 1f, 1000f);
             shader.start();
             shader.loadProjectionMatrix(projectionMatrix);
             shader.stop();
@@ -286,6 +284,19 @@ public class ArGLSurfaceView extends GLSurfaceView
 
         if (sensorSize != null && focalLengths != null && focalLengths.length > 0) {
             return (float)Math.toDegrees((2.0f * Math.atan(sensorSize.getWidth() / (2.0f * focalLengths[0]))));
+        }
+
+        return 65f;
+    }
+
+    //returns the fov of the camera
+    private float getVFOV(CameraCharacteristics info)
+    {
+        SizeF sensorSize = info.get(CameraCharacteristics.SENSOR_INFO_PHYSICAL_SIZE);
+        float[] focalLengths = info.get(CameraCharacteristics.LENS_INFO_AVAILABLE_FOCAL_LENGTHS);
+
+        if (sensorSize != null && focalLengths != null && focalLengths.length > 0) {
+            return (float)Math.toDegrees((2.0f * Math.atan(sensorSize.getHeight() / (2.0f * focalLengths[0]))));
         }
 
         return 65f;
