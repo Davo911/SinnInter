@@ -10,6 +10,7 @@ import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentPagerAdapter;
 import android.support.v4.view.ViewPager;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -20,6 +21,9 @@ import com.google.android.gms.maps.MapView;
 import com.google.android.gms.maps.MapsInitializer;
 import com.google.android.gms.maps.model.CameraPosition;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.MapStyleOptions;
+
+import static android.content.ContentValues.TAG;
 
 
 /**
@@ -96,6 +100,14 @@ public class MapFragment extends Fragment
 
         mapView.getMapAsync(mMap -> {
             googleMap = mMap;
+
+            //add style to Map
+            boolean success = googleMap.setMapStyle(MapStyleOptions.loadRawResourceStyle(this.getContext(),R.raw.pink_map_style));
+
+            if (!success) {
+                Log.e(TAG, "Style parsing failed.");
+            }
+
 
             // For zooming automatically to the location of the marker
             CameraPosition cameraPosition = new CameraPosition.Builder().target(new LatLng(51.050862, 13.733363)).zoom(12).build();
