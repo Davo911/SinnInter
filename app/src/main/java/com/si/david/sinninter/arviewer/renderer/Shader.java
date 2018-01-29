@@ -1,6 +1,7 @@
 package com.si.david.sinninter.arviewer.renderer;
 
 
+import android.opengl.Matrix;
 import android.util.Log;
 
 import java.io.UnsupportedEncodingException;
@@ -217,6 +218,8 @@ public class Shader
         loadMatrix("projectionMatrix", projection);
     }
 
+    @Deprecated
+    //use Matrix.perspectiveM()
     public float[] getProjectionMatrix(int width, int height, float fov, float nearPlane, float farPlane)
     {
         float aspectRatio = (float) width / (float)height;

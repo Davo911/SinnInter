@@ -59,7 +59,7 @@ public class ArGLSurfaceView extends GLSurfaceView
 
         mRenderer = new MyGLRenderer();
 
-        setEGLConfigChooser(8, 8, 8, 8, 16, 0);
+        setEGLConfigChooser(8, 8, 8, 8, 24, 0);
         getHolder().setFormat(PixelFormat.TRANSLUCENT);
         // Set the Renderer for drawing on the GLSurfaceView
         setRenderer(mRenderer);
@@ -84,9 +84,14 @@ public class ArGLSurfaceView extends GLSurfaceView
                     arObjects.get(0).setPosition(currentLocation.latitude + ray[0] * x / 111111.1,
                             currentLocation.longitude + ray[2] * x / (111111.1 * Math.cos(currentLocation.latitude)),
                             -1.5);
-                    arObjects.get(0).scale = 1.5;
                 }
             }
+        }
+
+        if(e.getPointerCount() > 1)
+        {
+            if (!arObjects.isEmpty())
+                arObjects.get(0).rotation += 1f;
         }
 
         return true;
@@ -192,12 +197,10 @@ public class ArGLSurfaceView extends GLSurfaceView
             {
                 CameraManager cManager = (CameraManager) getContext().getSystemService(CAMERA_SERVICE);
                 if(cManager != null)
-                    fov = getVFOV(cManager.getCameraCharacteristics(cManager.getCameraIdList()[0]));
-                //TODO:
-                fov = 35;
+                    fov = getHFOV(cManager.getCameraCharacteristics(cManager.getCameraIdList()[0]));
             }catch(CameraAccessException ex){ex.printStackTrace();}
 
-            projectionMatrix = shader.getProjectionMatrix(width, height, fov, 1f, 1000f);
+            Matrix.perspectiveM(projectionMatrix, 0, fov, (float)width/(float)height, 0.2f, 200f);
             shader.start();
             shader.loadProjectionMatrix(projectionMatrix);
             shader.stop();
@@ -208,7 +211,8 @@ public class ArGLSurfaceView extends GLSurfaceView
         {
             while(!modelsToLoad.isEmpty())
             {
-                arObjects.add(new ARObject(modelsToLoad.poll(), arObjectPositions.poll(), 1.0));
+                Double[] pos = arObjectPositions.poll();
+                arObjects.add(new ARObject(modelsToLoad.poll(), pos, pos[3]));
             }
 
             if (currentLocation == null)

@@ -1,0 +1,88 @@
+[
+  {
+    "parent":{
+      "name":"NEUSTÄDTER MARKT",
+      "subtitle":"Planfeststellungsverfahren",
+      "description":"Es ist das Eingangsangsportal zur Neustadt und muss sich tagtäglich der barocken Präsenz seines Gegenübers stellenl - das Königsufer. Schon bald erhält es mit dem Narrenhäusel einen wichtigen Baustein früherer Zeiten zurück. Doch wie soll der Rest gestaltet werden?",
+      "lat":51.051758,
+      "lng":13.741055,
+      "alt":-15,
+      "rot":0,
+      "scale":1.0,
+      "model":"spot",
+      "texture":"spot_texture",
+      "unlocked": true,
+      "likes": 25,
+      "favorite": false
+    },
+    "children":[
+      {
+        "name":"Testtitel 2",
+        "subtitle":"Untertitel",
+        "description":"Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores et ea rebum. Stet clita kasd gubergren, no sea takimata sanctus est Lorem ipsum dolor sit amet.",
+        "lat":51.053357,
+        "lng":13.736364,
+        "alt":-15,
+        "rot":0,
+        "scale":1.0,
+        "model":null,
+        "texture":null,
+        "unlocked": true,
+        "likes": 10,
+        "favorite": false
+
+      },
+      {
+        "name":"Testtitel 3",
+        "subtitle":"Untertitel",
+        "description":"Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores et ea rebum. Stet clita kasd gubergren, no sea takimata sanctus est Lorem ipsum dolor sit amet.",
+        "lat":51.057209,
+        "lng":13.741736,
+        "alt":-15,
+        "rot":0,
+        "scale":1.0,
+        "model":"spot",
+        "texture":"spot_texture",
+        "unlocked": true,
+        "likes": 3,
+        "favorite": false
+
+      }
+    ]
+  },
+  {
+    "parent":{
+      "name":"spot2",
+      "subtitle":"Untertitel",
+      "description":"Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores et ea rebum. Stet clita kasd gubergren, no sea takimata sanctus est Lorem ipsum dolor sit amet.",
+      "lat":51.049733,
+      "lng":13.730287,
+      "alt":-15,
+      "rot":0,
+      "scale":1.0,
+      "model":"spot",
+      "texture":"spot_texture",
+      "unlocked": false,
+      "likes": 16,
+      "favorite": true
+
+    },
+    "children":[
+      {
+        "name":"Testtitel 22",
+        "subtitle":"Untertitel",
+        "description":"Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores et ea rebum. Stet clita kasd gubergren, no sea takimata sanctus est Lorem ipsum dolor sit amet.",
+        "lat":51.037683,
+        "lng":13.736749,
+        "alt":-1.5,
+        "rot":0,
+        "scale":1.0,
+        "model":"building",
+        "texture":"building_texture_4k",
+        "unlocked": false,
+        "likes": 8,
+        "favorite": false
+      }
+    ]
+  }
+]

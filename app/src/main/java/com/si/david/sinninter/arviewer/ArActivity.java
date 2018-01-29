@@ -27,6 +27,9 @@ import com.google.android.gms.tasks.Task;
 import com.si.david.sinninter.R;
 import com.si.david.sinninter.arviewer.renderer.Model;
 
+import org.json.JSONArray;
+import org.json.JSONObject;
+
 import java.io.InputStream;
 
 
@@ -43,6 +46,8 @@ public class ArActivity extends AppCompatActivity implements
     private ArGLSurfaceView glSurfaceView;
 
     private float[] rotationMatrix = new float[16];      //deviceRotation
+
+    private String activeMarker = "";
 
     @Override
     protected void onCreate(Bundle savedInstanceState)
@@ -79,7 +84,7 @@ public class ArActivity extends AppCompatActivity implements
         glFrame.addView(glSurfaceView);
         glSurfaceView.setZOrderMediaOverlay(true);
 
-
+        /*
         //parse the obj and give the data to the arSurface
         Model.ModelData modelData = Model.ModelData.fromOBJ(
                 getResources().openRawResource(getResources().getIdentifier("spot",
@@ -87,8 +92,62 @@ public class ArActivity extends AppCompatActivity implements
 
         InputStream is = getResources().openRawResource(getResources().getIdentifier("spot_texture", "raw", getApplicationContext().getPackageName()));
         modelData.setTexture(BitmapFactory.decodeStream(is));
+        addObject(modelData, new LatLng(0, 0), -1.5d, 1.5d);
+*/
 
-        glSurfaceView.addArObject(modelData, new Double[]{0d, 0d, -1.5, 2.0});
+        //parse the json containting the diffenent locations
+        Bundle extras = getIntent().getExtras();
+        activeMarker = extras.getString("activeMarker");
+        String json = extras.getString("locations");
+        JSONArray jsonObjects;
+        try
+        {
+            jsonObjects = new JSONArray(json);
+
+
+            for(int i = 0; i < jsonObjects.length(); i++)
+            {
+                JSONObject parent = (JSONObject) ((JSONObject) jsonObjects.get(i)).get("parent");
+                JSONArray children = (JSONArray) ((JSONObject) jsonObjects.get(i)).get("children");
+                if(parent.getString("name").equals(activeMarker))
+                {
+                    addObject(parent);
+                    break;
+                }
+
+                for(int j = 0; j < children.length(); j++)
+                {
+                    JSONObject child = (JSONObject)children.get(j);
+                    if(child.getString("name").equals(activeMarker))
+                    {
+                        addObject(child);
+                        break;
+                    }
+                }
+
+            }
+
+            for(int i = 0; i < jsonObjects.length(); i++)
+            {
+                JSONObject parent = (JSONObject) ((JSONObject) jsonObjects.get(i)).get("parent");
+                JSONArray children = (JSONArray) ((JSONObject) jsonObjects.get(i)).get("children");
+                if(!parent.getString("name").equals(activeMarker))
+                {
+                    addObject(parent);
+                }
+
+                for(int j = 0; j < children.length(); j++)
+                {
+                    JSONObject child = (JSONObject)children.get(j);
+                    if(!child.getString("name").equals(activeMarker))
+                    {
+                        addObject(child);
+                    }
+                }
+
+            }
+
+        }catch(Exception e){e.printStackTrace();}
 
         //set up orientation sensor
         SensorManager sensorManager = (SensorManager) getApplicationContext().getSystemService(SENSOR_SERVICE);
@@ -102,13 +161,38 @@ public class ArActivity extends AppCompatActivity implements
         sensorManager.registerListener(this, rotationVecSensor, SensorManager.SENSOR_DELAY_FASTEST);
     }
 
+    public void addObject(JSONObject object)
+    {
+        try
+        {
+            Model.ModelData modelData = Model.ModelData.fromOBJ(
+                    getResources().openRawResource(getResources().getIdentifier(object.getString("model"),
+                            "raw", getApplicationContext().getPackageName())));
+
+            if(object.has("texture"))
+            {
+                InputStream is = getResources().openRawResource(getResources().getIdentifier(object.getString("texture"), "raw", getApplicationContext().getPackageName()));
+                modelData.setTexture(BitmapFactory.decodeStream(is));
+            }
+
+            addObject(modelData, new LatLng(object.getDouble("lat"), object.getDouble("lng")),
+                    object.getDouble("alt"), object.getDouble("scale"));
+
+        }catch(Exception e){e.printStackTrace();}
+    }
+
+
+    public void addObject(Model.ModelData model, LatLng position, double altitude, double scale)
+    {
+        glSurfaceView.addArObject(model, new Double[]{position.latitude, position.longitude, altitude, scale});
+    }
+
     @Override
     public void onStart()
     {
         googleApiClient.connect();
         super.onStart();
     }
-
 
     //GOOGLEAPICLIENT CONNECTION EVENTS
     @SuppressLint("MissingPermission")
