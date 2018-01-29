@@ -449,7 +449,8 @@ public class MapFragment extends Fragment implements
         mapView.getMapAsync(mMap -> {
             googleMap = mMap;
 
-            boolean success = googleMap.setMapStyle(MapStyleOptions.loadRawResourceStyle(getContext(), R.raw.map_style));
+            //add style to Map
+            boolean success = googleMap.setMapStyle(MapStyleOptions.loadRawResourceStyle(this.getContext(),R.raw.map_style));
 
             if (!success) {
                 Log.e(TAG, "Style parsing failed.");
