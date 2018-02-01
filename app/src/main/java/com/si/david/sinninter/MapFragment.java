@@ -13,11 +13,9 @@ import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.os.AsyncTask;
 import android.os.Bundle;
-import android.os.Parcelable;
-import android.support.design.widget.TabLayout;
+import android.support.design.widget.BottomSheetBehavior;
 import android.support.v4.app.Fragment;
-import android.support.v4.app.FragmentManager;
-import android.support.v4.app.FragmentStatePagerAdapter;
+import android.support.v4.app.FragmentTransaction;
 import android.support.v4.view.ViewPager;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -29,6 +27,7 @@ import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.MapView;
 import com.google.android.gms.maps.MapsInitializer;
+import com.google.android.gms.maps.model.BitmapDescriptor;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.CameraPosition;
 import com.google.android.gms.maps.model.LatLng;
@@ -78,16 +77,17 @@ public class MapFragment extends Fragment implements
     private float[] matrixR;
     private float[] matrixI;
     private float[] matrixValues;
-    private float orientation;
 
     MapView mapView;
     GoogleMap googleMap;
     CameraPosition cameraPosition;
-    ViewPager viewPager;
-    LocationsPageAdapter pageAdapter;
     OnFragmentInteractionListener mListener;
+    BottomSheetBehavior bottomSheetBehavior;
 
-    ArrayList<locationCardPageFragment> locationCards = new ArrayList<>();
+    LocationPagerFragment locationPagerFragment;
+    CalendarFragment calendarFragment;
+    ProfileFragment profileFragment;
+
     LinkedHashMap<String, Location> locations = new LinkedHashMap<>();
     ArrayList<Polyline> polyLines = new ArrayList<>();
 
@@ -308,33 +308,6 @@ public class MapFragment extends Fragment implements
         }
     }
 
-    class LocationsPageAdapter extends FragmentStatePagerAdapter
-    {
-        public LocationsPageAdapter(FragmentManager fm)
-        {
-            super(fm);
-        }
-
-
-        @Override
-        public Fragment getItem(int position)
-        {
-            return locationCards.get(position);
-        }
-
-        @Override
-        public int getCount()
-        {
-            return locationCards.size();
-        }
-
-        @Override
-        public void restoreState(Parcelable arg0, ClassLoader arg1)
-        {
-            //super.restoreState(arg0, arg1);
-        }
-    }
-
     public MapFragment()
     {
         // Required empty public constructor
@@ -342,7 +315,12 @@ public class MapFragment extends Fragment implements
 
     public static MapFragment newInstance()
     {
-        return new MapFragment();
+        MapFragment fragment = new MapFragment();
+        fragment.locationPagerFragment = LocationPagerFragment.newInstance();
+        fragment.calendarFragment = CalendarFragment.newInstance();
+        fragment.profileFragment = ProfileFragment.newInstance();
+
+        return fragment;
     }
 
     @Override
@@ -351,8 +329,8 @@ public class MapFragment extends Fragment implements
         sensorManager = (SensorManager)getContext().getSystemService(SENSOR_SERVICE);
         sensorAccelerometer = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
         sensorMagneticField = sensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD);
-        valuesAccelerometer = new float[3];
         valuesMagneticField = new float[3];
+        valuesAccelerometer = new float[3];
         matrixR = new float[9];
         matrixI = new float[9];
         matrixValues = new float[3];
@@ -370,8 +348,6 @@ public class MapFragment extends Fragment implements
                 Bitmap.createBitmap(markerBitmap2, 0, 0, markerBitmap2.getWidth(), markerBitmap2.getHeight(), matrix, true),
                 100, 100, false);
 
-        pageAdapter = new LocationsPageAdapter(getChildFragmentManager());
-
         super.onCreate(savedInstanceState);
     }
 
@@ -384,9 +360,7 @@ public class MapFragment extends Fragment implements
         // Inflate the layout for this fragment
         View view = inflater.inflate(R.layout.fragment_map, container, false);
 
-        viewPager = (ViewPager)view.findViewById(R.id.viewPager);
-        viewPager.setAdapter(pageAdapter);
-        viewPager.addOnPageChangeListener(new ViewPager.OnPageChangeListener()
+        locationPagerFragment.addOnPageChangeListener(new ViewPager.OnPageChangeListener()
         {
             @Override
             public void onPageScrolled(int position, float positionOffset, int positionOffsetPixels)
@@ -397,38 +371,41 @@ public class MapFragment extends Fragment implements
             @Override
             public void onPageSelected(int position)
             {
-                for(Polyline line : polyLines)
+                if(googleMap != null)
                 {
-                    line.remove();
-                }
-
-                Fragment f = locationCards.get(position);
-
-                if(f.getView() == null)
-                    return;
-
-                String title = ((TextView)(f.getView().findViewById(R.id.title))).getText().toString();
-                String parent = locations.get(title).parent;
-                if (parent == null)
-                    parent = title;
-
-                //draw new directions and update markers
-                for (Map.Entry<String, Location> location : locations.entrySet())
-                {
-                    if (location.getValue().parent != null &&
-                            location.getValue().parent.equals(parent))
+                    for (Polyline line : polyLines)
                     {
-                        new FetchUrl().execute(buildUrl(location.getValue().position,
-                                locations.get(location.getValue().parent).position));
+                        line.remove();
+                    }
 
-                        locations.get(location.getValue().parent).marker.setIcon(
-                                BitmapDescriptorFactory.fromBitmap(parentMarkerBitmap));
-                        locations.get(location.getValue().parent).marker.setAnchor(0.5f, 0.9f);
-                    }else
+                    Fragment f = locationPagerFragment.locationCards.get(position);
+
+                    if (f.getView() == null)
+                        return;
+
+                    String title = ((TextView) (f.getView().findViewById(R.id.title))).getText().toString();
+                    String parent = locations.get(title).parent;
+                    if (parent == null)
+                        parent = title;
+
+                    //draw new directions and update markers
+                    for (Map.Entry<String, Location> location : locations.entrySet())
                     {
-                        location.getValue().marker.setIcon(
-                                BitmapDescriptorFactory.fromBitmap(customMarkerBitmap));
-                        location.getValue().marker.setAnchor(0.5f, 0.5f);
+                        if (location.getValue().parent != null &&
+                                location.getValue().parent.equals(parent))
+                        {
+                            new FetchUrl().execute(buildUrl(location.getValue().position,
+                                    locations.get(location.getValue().parent).position));
+
+                            locations.get(location.getValue().parent).marker.setIcon(
+                                    BitmapDescriptorFactory.fromBitmap(parentMarkerBitmap));
+                            locations.get(location.getValue().parent).marker.setAnchor(0.5f, 0.9f);
+                        } else
+                        {
+                            location.getValue().marker.setIcon(
+                                    BitmapDescriptorFactory.fromBitmap(customMarkerBitmap));
+                            location.getValue().marker.setAnchor(0.5f, 0.5f);
+                        }
                     }
                 }
             }
@@ -440,8 +417,32 @@ public class MapFragment extends Fragment implements
             }
         });
 
-        TabLayout dots = (TabLayout)view.findViewById(R.id.dots);
-        dots.setupWithViewPager(viewPager, true);
+        final View bottomSheet = view.findViewById(R.id.bottom_sheet);
+        bottomSheetBehavior = BottomSheetBehavior.from(bottomSheet);
+        bottomSheetBehavior.setBottomSheetCallback(new BottomSheetBehavior.BottomSheetCallback(){
+            @Override
+            public void onStateChanged(View bottomSheet, int newState)
+            {
+                if (newState == BottomSheetBehavior.STATE_EXPANDED)
+                {
+                    locationPagerFragment.setCollapsed();
+                }
+                else if (newState == BottomSheetBehavior.STATE_COLLAPSED)
+                {
+                    locationPagerFragment.setExpanded();
+                }
+                else if (newState == BottomSheetBehavior.STATE_HIDDEN)
+                {
+                }
+            }
+
+            @Override
+            public void onSlide(View bottomSheet, float slideOffset)
+            {
+            }
+        });
+
+        displayLocationInfo();
 
         mapView = (MapView) view.findViewById(R.id.mapView);
         mapView.onCreate(savedInstanceState);
@@ -450,7 +451,7 @@ public class MapFragment extends Fragment implements
             googleMap = mMap;
 
             //add style to Map
-            boolean success = googleMap.setMapStyle(MapStyleOptions.loadRawResourceStyle(this.getContext(),R.raw.map_style));
+            boolean success = googleMap.setMapStyle(MapStyleOptions.loadRawResourceStyle(getContext(),R.raw.map_style));
 
             if (!success) {
                 Log.e(TAG, "Style parsing failed.");
@@ -591,14 +592,7 @@ public class MapFragment extends Fragment implements
                     .draggable(true));
         }
 
-        locationCardPageFragment newCard = new locationCardPageFragment();
-        Bundle args = new Bundle();
-        args.putString("title", title);
-        args.putString("subtitle", subtitle);
-        args.putString("content", description);
-        newCard.setArguments(args);
-
-        locationCards.add(newCard);
+        locationPagerFragment.addLocation(title, subtitle, description, position, parent);
     }
 
     @Override
@@ -710,6 +704,45 @@ public class MapFragment extends Fragment implements
         }
     }
 
+    public void displayLocationInfo()
+    {
+        if(bottomSheetBehavior == null)
+            return;
+
+        FragmentTransaction fragmentTransaction = getChildFragmentManager().beginTransaction();
+        fragmentTransaction.replace(R.id.fragment_container, locationPagerFragment);
+        fragmentTransaction.commit();
+
+        getChildFragmentManager().executePendingTransactions();
+        bottomSheetBehavior.setState(BottomSheetBehavior.STATE_COLLAPSED);
+    }
+
+    public void displayCalendar()
+    {
+        if(bottomSheetBehavior == null)
+            return;
+
+        FragmentTransaction fragmentTransaction = getChildFragmentManager().beginTransaction();
+        fragmentTransaction.replace(R.id.fragment_container, calendarFragment);
+        fragmentTransaction.commit();
+
+        getChildFragmentManager().executePendingTransactions();
+        bottomSheetBehavior.setState(BottomSheetBehavior.STATE_EXPANDED);
+    }
+
+    public void displayProfile()
+    {
+        if(bottomSheetBehavior == null)
+            return;
+
+        FragmentTransaction fragmentTransaction = getChildFragmentManager().beginTransaction();
+        fragmentTransaction.replace(R.id.fragment_container, profileFragment);
+        fragmentTransaction.commit();
+
+        getChildFragmentManager().executePendingTransactions();
+        bottomSheetBehavior.setState(BottomSheetBehavior.STATE_EXPANDED);
+    }
+
     //SENSOR EVENTS
     @Override
     public void onSensorChanged(SensorEvent event)
@@ -717,33 +750,34 @@ public class MapFragment extends Fragment implements
         switch(event.sensor.getType())
         {
             case Sensor.TYPE_ACCELEROMETER:
-                for(int i = 0; i < 3; i++)
+                for ( int i = 0; i < event.values.length; i++ )
                 {
-                    valuesAccelerometer[i] = event.values[i];
+                    valuesAccelerometer[i] = valuesAccelerometer[i] + 0.5f * (event.values[i] - valuesAccelerometer[i]);
                 }
                 break;
             case Sensor.TYPE_MAGNETIC_FIELD:
-                for(int i = 0; i < 3; i++)
+                for ( int i = 0; i < event.values.length; i++ )
                 {
-                    valuesMagneticField[i] = event.values[i];
+                    valuesMagneticField[i] = valuesMagneticField[i] + 0.5f * (event.values[i] - valuesMagneticField[i]);
                 }
                 break;
         }
 
-        boolean success = SensorManager.getRotationMatrix(matrixR, matrixI,
-                valuesAccelerometer, valuesMagneticField);
-
-        if(success)
+        if(valuesAccelerometer != null && valuesMagneticField != null)
         {
-            SensorManager.getOrientation(matrixR, matrixValues);
+            boolean success = SensorManager.getRotationMatrix(matrixR, matrixI,
+                    valuesAccelerometer, valuesMagneticField);
 
-            orientation = orientation * 0.5f + (float)Math.toDegrees(matrixR[0]) * 0.5f;
-            if(myLocation != null)
+            if (success)
             {
-                myLocation.setRotation(orientation);
+                SensorManager.getOrientation(matrixR, matrixValues);
+
+                if (myLocation != null)
+                {
+                    myLocation.setRotation((float)Math.toDegrees(matrixValues[0]) + 55f);
+                }
             }
         }
-
     }
 
     @Override

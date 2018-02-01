@@ -19,11 +19,7 @@ import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationServices;
-import com.google.android.gms.location.LocationSettingsRequest;
-import com.google.android.gms.location.LocationSettingsResponse;
-import com.google.android.gms.location.SettingsClient;
 import com.google.android.gms.maps.model.LatLng;
-import com.google.android.gms.tasks.Task;
 import com.si.david.sinninter.R;
 import com.si.david.sinninter.arviewer.renderer.Model;
 
@@ -31,7 +27,6 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.io.InputStream;
-
 
 public class ArActivity extends AppCompatActivity implements
         GoogleApiClient.ConnectionCallbacks,
@@ -70,7 +65,6 @@ public class ArActivity extends AppCompatActivity implements
                 .addApi(LocationServices.API)
                 .build();
 
-
         //init camera preview
         camera = Camera.open();
         camera.setDisplayOrientation(90);
@@ -83,17 +77,6 @@ public class ArActivity extends AppCompatActivity implements
         FrameLayout glFrame = (FrameLayout) findViewById(R.id.gl_frame);
         glFrame.addView(glSurfaceView);
         glSurfaceView.setZOrderMediaOverlay(true);
-
-        /*
-        //parse the obj and give the data to the arSurface
-        Model.ModelData modelData = Model.ModelData.fromOBJ(
-                getResources().openRawResource(getResources().getIdentifier("spot",
-                        "raw", getApplicationContext().getPackageName())));
-
-        InputStream is = getResources().openRawResource(getResources().getIdentifier("spot_texture", "raw", getApplicationContext().getPackageName()));
-        modelData.setTexture(BitmapFactory.decodeStream(is));
-        addObject(modelData, new LatLng(0, 0), -1.5d, 1.5d);
-*/
 
         //parse the json containting the diffenent locations
         Bundle extras = getIntent().getExtras();
@@ -176,15 +159,15 @@ public class ArActivity extends AppCompatActivity implements
             }
 
             addObject(modelData, new LatLng(object.getDouble("lat"), object.getDouble("lng")),
-                    object.getDouble("alt"), object.getDouble("scale"));
+                    object.getDouble("alt"), object.getDouble("scale"), object.getDouble("rot"));
 
         }catch(Exception e){e.printStackTrace();}
     }
 
 
-    public void addObject(Model.ModelData model, LatLng position, double altitude, double scale)
+    public void addObject(Model.ModelData model, LatLng position, double altitude, double scale, double rotation)
     {
-        glSurfaceView.addArObject(model, new Double[]{position.latitude, position.longitude, altitude, scale});
+        glSurfaceView.addArObject(model, new Double[]{position.latitude, position.longitude, altitude, scale, rotation});
     }
 
     @Override
@@ -204,16 +187,11 @@ public class ArActivity extends AppCompatActivity implements
         locationRequest.setFastestInterval(10);
         locationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
 
-        LocationSettingsRequest.Builder builder = new LocationSettingsRequest.Builder()
-                .addLocationRequest(locationRequest);
-
-        SettingsClient client = LocationServices.getSettingsClient(this);
-        Task<LocationSettingsResponse> task = client.checkLocationSettings(builder.build());
-
-        task.addOnSuccessListener(this, locationSettingsResponse -> LocationServices.FusedLocationApi.requestLocationUpdates(googleApiClient, locationRequest, location ->
+        LocationServices.FusedLocationApi.requestLocationUpdates(googleApiClient, locationRequest, location ->
         {
             glSurfaceView.updateLocation(new LatLng(location.getLatitude(), location.getLongitude()));
-        }));
+        });
+
     }
 
     @Override

@@ -24,11 +24,7 @@ import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationServices;
-import com.google.android.gms.location.LocationSettingsRequest;
-import com.google.android.gms.location.LocationSettingsResponse;
-import com.google.android.gms.location.SettingsClient;
 import com.google.android.gms.maps.model.LatLng;
-import com.google.android.gms.tasks.Task;
 import com.si.david.sinninter.arviewer.ArActivity;
 
 import org.json.JSONArray;
@@ -80,6 +76,10 @@ public class MainActivity extends AppCompatActivity
         mapFragment = MapFragment.newInstance();
         calendarFragment = CalendarFragment.newInstance();
         profileFragment = ProfileFragment.newInstance();
+
+        FragmentTransaction fragmentTransaction = getSupportFragmentManager().beginTransaction();
+        fragmentTransaction.replace(R.id.fragment_container, mapFragment);
+        fragmentTransaction.commit();
 
         try
         {
@@ -260,9 +260,7 @@ public class MainActivity extends AppCompatActivity
             ActivityCompat.requestPermissions(this,
                     new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, 1);
 
-            FragmentTransaction fragmentTransaction = getSupportFragmentManager().beginTransaction();
-            fragmentTransaction.replace(R.id.fragment_container, mapFragment);
-            fragmentTransaction.commit();
+            mapFragment.displayLocationInfo();
 
             //close the menu
             if(menuExpanded)
@@ -271,9 +269,7 @@ public class MainActivity extends AppCompatActivity
 
         calendarButton.setOnClickListener(view ->
         {
-            FragmentTransaction fragmentTransaction = getSupportFragmentManager().beginTransaction();
-            fragmentTransaction.replace(R.id.fragment_container, calendarFragment);
-            fragmentTransaction.commit();
+            mapFragment.displayCalendar();
 
             //close the menu
             if(menuExpanded)
@@ -282,9 +278,7 @@ public class MainActivity extends AppCompatActivity
 
         profileButton.setOnClickListener(view ->
         {
-            FragmentTransaction fragmentTransaction = getSupportFragmentManager().beginTransaction();
-            fragmentTransaction.replace(R.id.fragment_container, profileFragment);
-            fragmentTransaction.commit();
+            mapFragment.displayProfile();
 
             //close the menu
             if(menuExpanded)
@@ -366,7 +360,6 @@ public class MainActivity extends AppCompatActivity
         } catch (Exception e) {
             e.printStackTrace();
         }
-
     }
 
     @Override
@@ -433,14 +426,8 @@ public class MainActivity extends AppCompatActivity
         locationRequest.setFastestInterval(10);
         locationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
 
-        LocationSettingsRequest.Builder builder = new LocationSettingsRequest.Builder()
-                .addLocationRequest(locationRequest);
+        LocationServices.FusedLocationApi.requestLocationUpdates(googleApiClient, locationRequest, this::updateLocation);
 
-        SettingsClient client = LocationServices.getSettingsClient(this);
-        Task<LocationSettingsResponse> task = client.checkLocationSettings(builder.build());
-
-        task.addOnSuccessListener(this, locationSettingsResponse ->
-                LocationServices.FusedLocationApi.requestLocationUpdates(googleApiClient, locationRequest, this::updateLocation));
     }
 
     @Override

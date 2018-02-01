@@ -52,13 +52,14 @@
         android:layout_marginStart="8dp"
         android:layout_marginTop="16dp"
         android:layout_weight="1"
-        android:background="@null"
+        android:background="@color/colorPrimary"
         android:clickable="true"
         android:tint="@android:color/white"
+        app:backgroundTint="@color/colorPrimary"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/subtitle"
-        app:srcCompat="?android:attr/fingerprintAuthDrawable" />
+        app:srcCompat="@drawable/si_ar" />
 
     <ImageView
         android:id="@+id/upArrow"
@@ -80,11 +81,11 @@
         android:layout_height="48dp"
         android:layout_marginEnd="4dp"
         android:layout_weight="1"
+        android:tint="@color/colorPrimaryDark"
         app:layout_constraintBottom_toBottomOf="@+id/arButton"
         app:layout_constraintEnd_toStartOf="@+id/likesTextView"
         app:layout_constraintTop_toTopOf="@+id/arButton"
-        app:srcCompat="@drawable/si_favorit_inaktiv"
-        android:tint="@color/colorPrimaryDark" />
+        app:srcCompat="@drawable/si_favorit_inaktiv" />
 
     <ImageView
         android:id="@+id/favoriteIcon"
@@ -92,11 +93,11 @@
         android:layout_height="48dp"
         android:layout_marginStart="48dp"
         android:layout_weight="1"
+        android:tint="@color/colorPrimaryDark"
         app:layout_constraintBottom_toBottomOf="@+id/arButton"
         app:layout_constraintStart_toEndOf="@+id/arButton"
         app:layout_constraintTop_toTopOf="@+id/arButton"
-        app:srcCompat="@drawable/si_push_inaktiv"
-        android:tint="@color/colorPrimaryDark" />
+        app:srcCompat="@drawable/si_push_inaktiv" />
 
     <TextView
         android:id="@+id/likesTextView"
@@ -152,8 +153,8 @@
                 android:layout_width="match_parent"
                 android:layout_height="48dp"
                 android:background="@null"
-                app:srcCompat="@drawable/si_geschichte_kalender"
-                android:tint="@color/colorPrimaryDark"/>
+                android:tint="@color/colorPrimaryDark"
+                app:srcCompat="@drawable/si_geschichte_kalender" />
 
             <TextView
                 android:id="@+id/textView3"
@@ -176,15 +177,15 @@
                 android:layout_width="match_parent"
                 android:layout_height="48dp"
                 android:background="@null"
-                app:srcCompat="@drawable/si_architekt_profil"
-                android:tint="@color/colorPrimaryDark" />
+                android:tint="@color/colorPrimaryDark"
+                app:srcCompat="@drawable/si_architekt_profil" />
 
             <TextView
                 android:id="@+id/textView4"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:gravity="center"
-                android:text="Bilder"
+                android:text="Architekt"
                 android:textSize="12sp" />
         </LinearLayout>
 
@@ -199,8 +200,8 @@
                 android:layout_width="match_parent"
                 android:layout_height="48dp"
                 android:background="@null"
-                app:srcCompat="@drawable/si_pla_ne"
-                android:tint="@color/colorPrimaryDark" />
+                android:tint="@color/colorPrimaryDark"
+                app:srcCompat="@drawable/si_pla_ne" />
 
             <TextView
                 android:id="@+id/textView5"
@@ -222,15 +223,15 @@
                 android:layout_width="match_parent"
                 android:layout_height="48dp"
                 android:background="@null"
-                app:srcCompat="@drawable/si_bilder"
-                android:tint="@color/colorPrimaryDark" />
+                android:tint="@color/colorPrimaryDark"
+                app:srcCompat="@drawable/si_bilder" />
 
             <TextView
                 android:id="@+id/textView6"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:gravity="center"
-                android:text="Architekt"
+                android:text="Bilder"
                 android:textSize="12sp" />
         </LinearLayout>
 
@@ -245,8 +246,8 @@
                 android:layout_width="match_parent"
                 android:layout_height="48dp"
                 android:background="@null"
-                app:srcCompat="@drawable/si_presse"
-                android:tint="@color/colorPrimaryDark" />
+                android:tint="@color/colorPrimaryDark"
+                app:srcCompat="@drawable/si_presse" />
 
             <TextView
                 android:id="@+id/textView7"
@@ -268,8 +269,8 @@
                 android:layout_width="match_parent"
                 android:layout_height="48dp"
                 android:background="@null"
-                app:srcCompat="@drawable/si_gutachten"
-                android:tint="@color/colorPrimaryDark" />
+                android:tint="@color/colorPrimaryDark"
+                app:srcCompat="@drawable/si_gutachten" />
 
             <TextView
                 android:id="@+id/textView8"
@@ -292,8 +293,8 @@
                 android:layout_width="match_parent"
                 android:layout_height="48dp"
                 android:background="@null"
-                app:srcCompat="@drawable/si_umgebung"
-                android:tint="@color/colorPrimaryDark" />
+                android:tint="@color/colorPrimaryDark"
+                app:srcCompat="@drawable/si_umgebung" />
 
             <TextView
                 android:id="@+id/textView9"
@@ -315,8 +316,8 @@
                 android:layout_width="match_parent"
                 android:layout_height="48dp"
                 android:background="@null"
-                app:srcCompat="@drawable/si_daten"
-                android:tint="@color/colorPrimaryDark" />
+                android:tint="@color/colorPrimaryDark"
+                app:srcCompat="@drawable/si_daten" />
 
             <TextView
                 android:id="@+id/textView10"

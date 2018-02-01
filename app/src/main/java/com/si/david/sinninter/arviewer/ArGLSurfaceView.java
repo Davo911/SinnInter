@@ -112,6 +112,7 @@ public class ArGLSurfaceView extends GLSurfaceView
             this.position[0] = position[0];     //latitude
             this.position[1] = position[2];     //height
             this.position[2] = position[1];     //longitude
+            this.rotation = position[4];
             this.scale = scale;
         }
 
