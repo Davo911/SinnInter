@@ -78,56 +78,33 @@ public class ArActivity extends AppCompatActivity implements
         glFrame.addView(glSurfaceView);
         glSurfaceView.setZOrderMediaOverlay(true);
 
-        //parse the json containting the diffenent locations
+        //parse the json containting the diffenent _locations
         Bundle extras = getIntent().getExtras();
         activeMarker = extras.getString("activeMarker");
         String json = extras.getString("locations");
         JSONArray jsonObjects;
+
         try
         {
             jsonObjects = new JSONArray(json);
 
-
             for(int i = 0; i < jsonObjects.length(); i++)
             {
-                JSONObject parent = (JSONObject) ((JSONObject) jsonObjects.get(i)).get("parent");
-                JSONArray children = (JSONArray) ((JSONObject) jsonObjects.get(i)).get("children");
-                if(parent.getString("name").equals(activeMarker))
+                JSONObject object = (JSONObject)jsonObjects.get(i);
+                if(object.getString("name").equals(activeMarker))
                 {
-                    addObject(parent);
+                    addObject(object);
                     break;
                 }
-
-                for(int j = 0; j < children.length(); j++)
-                {
-                    JSONObject child = (JSONObject)children.get(j);
-                    if(child.getString("name").equals(activeMarker))
-                    {
-                        addObject(child);
-                        break;
-                    }
-                }
-
             }
 
             for(int i = 0; i < jsonObjects.length(); i++)
             {
-                JSONObject parent = (JSONObject) ((JSONObject) jsonObjects.get(i)).get("parent");
-                JSONArray children = (JSONArray) ((JSONObject) jsonObjects.get(i)).get("children");
-                if(!parent.getString("name").equals(activeMarker))
+                JSONObject object = (JSONObject)jsonObjects.get(i);
+                if(!object.getString("name").equals(activeMarker))
                 {
-                    addObject(parent);
+                    addObject(object);
                 }
-
-                for(int j = 0; j < children.length(); j++)
-                {
-                    JSONObject child = (JSONObject)children.get(j);
-                    if(!child.getString("name").equals(activeMarker))
-                    {
-                        addObject(child);
-                    }
-                }
-
             }
 
         }catch(Exception e){e.printStackTrace();}

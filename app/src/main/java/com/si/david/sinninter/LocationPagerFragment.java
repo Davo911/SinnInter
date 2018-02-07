@@ -7,13 +7,18 @@ import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentStatePagerAdapter;
 import android.support.v4.view.ViewPager;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
 import com.google.android.gms.maps.model.LatLng;
 
+import org.json.JSONObject;
+
 import java.util.ArrayList;
+
+import biz.laenger.android.vpbs.BottomSheetUtils;
 
 
 public class LocationPagerFragment extends Fragment
@@ -21,9 +26,22 @@ public class LocationPagerFragment extends Fragment
     ViewPager viewPager;
     LocationsPageAdapter pageAdapter;
     ViewPager.OnPageChangeListener onPageChangeListener;
+    TabLayout tabLayout;
 
     ArrayList<locationCardPageFragment> locationCards = new ArrayList<>();
+    boolean expanded = false;
 
+    public void setActive(String title)
+    {
+        for(int i = 0; i < locationCards.size(); i++)
+        {
+            if(locationCards.get(i).locationInfo.title.equals(title))
+            {
+                viewPager.setCurrentItem(i);
+                return;
+            }
+        }
+    }
 
     class LocationsPageAdapter extends FragmentStatePagerAdapter
     {
@@ -62,7 +80,6 @@ public class LocationPagerFragment extends Fragment
         return new LocationPagerFragment();
     }
 
-
     @Override
     public void onCreate(Bundle savedInstanceState)
     {
@@ -81,25 +98,42 @@ public class LocationPagerFragment extends Fragment
         viewPager = (ViewPager)view.findViewById(R.id.viewPager);
         viewPager.setAdapter(pageAdapter);
 
-        TabLayout dots = (TabLayout)view.findViewById(R.id.dots);
-        dots.setupWithViewPager(viewPager, true);
+        BottomSheetUtils.setupViewPager(viewPager);
 
         if(onPageChangeListener != null)
             viewPager.addOnPageChangeListener(onPageChangeListener);
 
+        viewPager.addOnPageChangeListener(new ViewPager.OnPageChangeListener()
+        {
+            @Override
+            public void onPageScrolled(int position, float positionOffset, int positionOffsetPixels)
+            {
+            }
+
+            @Override
+            public void onPageSelected(int position)
+            {
+                if(expanded)
+                    locationCards.get(position).setExpanded();
+                else
+                    locationCards.get(position).setCollapsed();
+            }
+
+            @Override
+            public void onPageScrollStateChanged(int state)
+            {
+            }
+        });
+
+        if(tabLayout != null)
+            tabLayout.setupWithViewPager(viewPager, true);
+
         return view;
     }
 
-    public void addLocation(String title, String subtitle, String description, LatLng position, String parent)
+    public void addLocation(MapFragment.LocationInfo locationInfo)
     {
-        locationCardPageFragment newCard = new locationCardPageFragment();
-        Bundle args = new Bundle();
-        args.putString("title", title);
-        args.putString("subtitle", subtitle);
-        args.putString("content", description);
-        newCard.setArguments(args);
-
-        locationCards.add(newCard);
+        locationCards.add(locationCardPageFragment.newInstance(locationInfo));
     }
 
     public void addOnPageChangeListener(ViewPager.OnPageChangeListener listener)
@@ -109,8 +143,16 @@ public class LocationPagerFragment extends Fragment
         onPageChangeListener = listener;
     }
 
+    public void setupTabLayout(TabLayout tabLayout)
+    {
+        if(viewPager != null)
+            tabLayout.setupWithViewPager(viewPager, true);
+        this.tabLayout = tabLayout;
+    }
+
     public void setCollapsed()
     {
+        expanded = false;
         if(!locationCards.isEmpty())
         {
             locationCards.get(viewPager.getCurrentItem()).setCollapsed();
@@ -119,9 +161,22 @@ public class LocationPagerFragment extends Fragment
 
     public void setExpanded()
     {
+        expanded = true;
         if(!locationCards.isEmpty())
         {
             locationCards.get(viewPager.getCurrentItem()).setExpanded();
         }
+    }
+
+    public MapFragment.LocationInfo.ChildLocation unlock(LatLng userPosition)
+    {
+
+        for (locationCardPageFragment locationCard : locationCards)
+        {
+            MapFragment.LocationInfo.ChildLocation location = locationCard.unlock(userPosition);
+            if(location != null)
+                return location;
+        }
+        return null;
     }
 }

@@ -6,19 +6,27 @@ import android.animation.ValueAnimator;
 import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.Drawable;
 import android.location.Location;
 import android.os.Bundle;
+import android.os.CountDownTimer;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.design.widget.BottomSheetBehavior;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.FragmentTransaction;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
+import android.util.DisplayMetrics;
+import android.view.Gravity;
+import android.view.View;
 import android.view.WindowManager;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
 import android.widget.ImageButton;
 import android.widget.ImageView;
+import android.widget.TextView;
 
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
@@ -38,18 +46,21 @@ import java.io.InputStream;
 import java.util.Objects;
 import java.util.Scanner;
 
+
 public class MainActivity extends AppCompatActivity
         implements MapFragment.OnFragmentInteractionListener,
         ActivityCompat.OnRequestPermissionsResultCallback,
-        locationCardPageFragment.OnLocationCardInteractionListener,
+        locationCardPageFragment.OnArRequestListener,
         GoogleApiClient.ConnectionCallbacks,
-        GoogleApiClient.OnConnectionFailedListener
+        GoogleApiClient.OnConnectionFailedListener,
+        LoginFragment.LoginPageListener
 {
     GoogleApiClient googleApiClient;
 
     MapFragment mapFragment;
     CalendarFragment calendarFragment;
     ProfileFragment profileFragment;
+    LoginFragment loginFragment;
     JSONArray locations;
 
     String activeMarker = "";
@@ -59,9 +70,10 @@ public class MainActivity extends AppCompatActivity
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-
+/*
         getWindow().setFlags(WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS,
                 WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS);
+*/
 
         //init locationServices
         googleApiClient = new GoogleApiClient.Builder(this)
@@ -70,8 +82,7 @@ public class MainActivity extends AppCompatActivity
                 .addApi(LocationServices.API)
                 .build();
 
-
-        //parse the json and add the locations to the mapView
+        //parse the json and add the_locations to the mapView
         loadLocations("locations");
         mapFragment = MapFragment.newInstance();
         calendarFragment = CalendarFragment.newInstance();
@@ -81,32 +92,20 @@ public class MainActivity extends AppCompatActivity
         fragmentTransaction.replace(R.id.fragment_container, mapFragment);
         fragmentTransaction.commit();
 
+        loginFragment = LoginFragment.newInstance();
+        FragmentTransaction fragmentTransaction2 = getSupportFragmentManager().beginTransaction();
+        fragmentTransaction2.replace(R.id.login_container, loginFragment);
+        fragmentTransaction2.commit();
+
         try
         {
             for (int i = 0; i < locations.length(); i++)
             {
-                JSONObject parent = (JSONObject) ((JSONObject) locations.get(i)).get("parent");
-                JSONArray children = (JSONArray) ((JSONObject) locations.get(i)).get("children");
-
-                mapFragment.addLocation(parent.getString("name"),
-                        parent.getString("subtitle"),
-                        parent.getString("description"),
-                        new LatLng(parent.getDouble("lat"), parent.getDouble("lng")),
-                        null);
-
-                for (int j = 0; j < children.length(); j++)
-                {
-                    JSONObject child = (JSONObject) children.get(j);
-
-                    mapFragment.addLocation(child.getString("name"),
-                            child.getString("subtitle"),
-                            child.getString("description"),
-                            new LatLng(child.getDouble("lat"), child.getDouble("lng")),
-                            parent.getString("name"));
-                }
-
+                JSONObject location = (JSONObject)locations.get(i);
+                mapFragment.addLocation(location);
             }
         }catch (Exception e){e.printStackTrace();}
+
 
         setUpButtons();
 
@@ -125,7 +124,7 @@ public class MainActivity extends AppCompatActivity
     @Override
     public void onPause()
     {
-        saveLocations("locations.json");
+        saveLocations("_locationss.json");
         super.onPause();
     }
 
@@ -135,6 +134,7 @@ public class MainActivity extends AppCompatActivity
         ImageButton mapButton = (ImageButton)findViewById(R.id.mapButton);
         ImageButton calendarButton = (ImageButton)findViewById(R.id.calendarButton);
         ImageButton profileButton = (ImageButton)findViewById(R.id.profileButton);
+        ImageButton locationButton = (ImageButton)findViewById(R.id.arButton);
         Drawable menuBackground = ((ImageView)findViewById(R.id.menuBackground)).getDrawable();
 
         ValueAnimator growBackground = ObjectAnimator.ofInt(menuBackground.getIntrinsicWidth(), (int)(menuBackground.getIntrinsicWidth() * 4.75));
@@ -284,6 +284,22 @@ public class MainActivity extends AppCompatActivity
             if(menuExpanded)
                 hamburgerButton.callOnClick();
         });
+
+        locationButton.setOnClickListener(view -> {
+            mapFragment.bottomSheetBehavior.setState(BottomSheetBehavior.STATE_COLLAPSED);
+            if(mapFragment.unlockSpot())
+            {
+                displayDialog("Kategorien freigeschaltet", 1500,
+                        R.drawable.si_geschichte_kalender, R.drawable.si_architekt_profil, R.drawable.si_bilder,
+                        null);
+            }
+            else
+            {
+                displayDialog("nichts neues freigeschaltet", 2000, 0,0,0,
+                        "Begib dich zu unbesuchten Spots, um mehr Informationen freizuschalten");
+            }
+        });
+
     }
 
     @Override
@@ -301,7 +317,6 @@ public class MainActivity extends AppCompatActivity
                     grantResults[0] == PackageManager.PERMISSION_GRANTED)
             {
                 googleApiClient.connect();
-                mapFragment.enableUserLocation();
             }
         }else if(requestCode == 2)
         {
@@ -318,7 +333,7 @@ public class MainActivity extends AppCompatActivity
         }
     }
 
-    //loads the locations-json and initializes the locations-Object
+    //loads the _locations-json and initializes the _locations-Object
     private void loadLocations(String resourceName)
     {
 
@@ -346,7 +361,7 @@ public class MainActivity extends AppCompatActivity
 
     }
 
-    //saves the locations-json to cache
+    //saves the _locations-json to cache
     private void saveLocations(String fileName)
     {
         File file;
@@ -359,6 +374,52 @@ public class MainActivity extends AppCompatActivity
             outputStream.close();
         } catch (Exception e) {
             e.printStackTrace();
+        }
+    }
+
+    void displayDialog(String title,int closeTimer, int res1, int res2, int res3, String subtitle)
+    {
+        if (mapFragment.bottomSheetBehavior.getState() != BottomSheetBehavior.STATE_EXPANDED)
+        {
+            View dialogView = getLayoutInflater().inflate(R.layout.dialog_layout, null);
+            ((TextView) dialogView.findViewById(R.id.dialog_title)).setText(title);
+
+            ((ImageView) dialogView.findViewById(R.id.dialogImage1)).setImageResource(res1);
+            ((ImageView) dialogView.findViewById(R.id.dialogImage2)).setImageResource(res2);
+            ((ImageView) dialogView.findViewById(R.id.dialogImage3)).setImageResource(res3);
+
+            if(subtitle != null)
+            {
+                ((TextView)dialogView.findViewById(R.id.subtitle)).setText(subtitle);
+            }
+
+            AlertDialog dialog = new AlertDialog.Builder(this)
+                    .setView(dialogView)
+                    .create();
+
+            dialog.getWindow().clearFlags(WindowManager.LayoutParams.FLAG_DIM_BEHIND);
+            dialog.getWindow().setBackgroundDrawable(new ColorDrawable(android.graphics.Color.TRANSPARENT));
+            dialog.getWindow().setGravity(Gravity.BOTTOM);
+            DisplayMetrics displayMetrics = getResources().getDisplayMetrics();
+            WindowManager.LayoutParams lp = dialog.getWindow().getAttributes();
+            lp.y = displayMetrics.heightPixels / 2 + (int) (150f / displayMetrics.density);
+            dialog.getWindow().setAttributes(lp);
+            dialog.show();
+
+            new CountDownTimer(closeTimer, closeTimer)
+            {
+
+                @Override
+                public void onTick(long millisUntilFinished)
+                {
+                }
+
+                @Override
+                public void onFinish()
+                {
+                    dialog.dismiss();
+                }
+            }.start();
         }
     }
 
@@ -401,6 +462,8 @@ public class MainActivity extends AppCompatActivity
         activeMarker = name;
     }
 
+
+    //locationCardListeners
     @Override
     public void onArRequest()
     {
@@ -409,6 +472,18 @@ public class MainActivity extends AppCompatActivity
                 new String[]{Manifest.permission.CAMERA, Manifest.permission.ACCESS_FINE_LOCATION}, 2);
 
         //if permission is granted, the new Activity is started in the RequestPermissionResultCallback
+    }
+
+    @Override
+    public void onClickArrow()
+    {
+        if(mapFragment.bottomSheetBehavior.getState() == BottomSheetBehavior.STATE_COLLAPSED)
+        {
+            mapFragment.bottomSheetBehavior.setState(BottomSheetBehavior.STATE_EXPANDED);
+        }else if(mapFragment.bottomSheetBehavior.getState() == BottomSheetBehavior.STATE_EXPANDED)
+        {
+            mapFragment.bottomSheetBehavior.setState(BottomSheetBehavior.STATE_COLLAPSED);
+        }
     }
 
     private void updateLocation(Location location)
@@ -427,7 +502,6 @@ public class MainActivity extends AppCompatActivity
         locationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
 
         LocationServices.FusedLocationApi.requestLocationUpdates(googleApiClient, locationRequest, this::updateLocation);
-
     }
 
     @Override
@@ -440,5 +514,36 @@ public class MainActivity extends AppCompatActivity
     public void onConnectionFailed(@NonNull ConnectionResult connectionResult)
     {
         //TODO: notify user
+    }
+
+    @Override
+    public void onLoginSuccessful()
+    {
+        new CountDownTimer(100, 100)
+        {
+            public void onTick(long millisUntilFinished)
+            {
+            }
+
+            public void onFinish()
+            {
+                FragmentTransaction fragmentTransaction = getSupportFragmentManager().beginTransaction();
+                fragmentTransaction.setCustomAnimations(R.anim.slide_out, R.anim.slide_out);
+                fragmentTransaction.remove(loginFragment);
+                fragmentTransaction.commit();
+            }
+        }.start();
+
+        new CountDownTimer(400, 400)
+        {
+            public void onTick(long millisUntilFinished)
+            {
+            }
+
+            public void onFinish()
+            {
+                mapFragment.animateCamera();
+            }
+        }.start();
     }
 }

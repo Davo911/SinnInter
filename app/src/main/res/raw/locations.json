@@ -1,87 +1,103 @@
 [
   {
-    "parent":{
-      "name":"NEUSTÄDTER MARKT",
-      "subtitle":"Planfeststellungsverfahren",
-      "description":"Es ist das Eingangsangsportal zur Neustadt und muss sich tagtäglich der barocken Präsenz seines Gegenübers stellenl - das Königsufer. Schon bald erhält es mit dem Narrenhäusel einen wichtigen Baustein früherer Zeiten zurück. Doch wie soll der Rest gestaltet werden?",
-      "lat":51.051758,
-      "lng":13.741055,
-      "alt":-1.5,
-      "rot":0,
-      "scale":1.0,
-      "model":"spot",
-      "texture":"spot_texture",
-      "unlocked": true,
-      "likes": 25,
-      "favorite": false
-    },
+  "name":"NEUSTÄDTER MARKT",
+  "subtitle":"Planfeststellungsverfahren",
+  "description":"Es ist das Eingangsangsportal zur Neustadt und muss sich tagtäglich der barocken Präsenz seines Gegenübers stellenl - das Königsufer. Schon bald erhält es mit dem Narrenhäusel einen wichtigen Baustein früherer Zeiten zurück. Doch wie soll der Rest gestaltet werden?",
+  "lat":51.058051,
+  "lng":13.741247,
+  "alt":-1.5,
+  "rot":0,
+  "scale":1.0,
+  "model":"spot",
+  "texture":"spot_texture",
+  "unlocked": false,
+  "likes": 9,
+  "favorite": false,
+  "children":[
+    {
+    "name":"Spot 1",
+    "lat":51.053408,
+    "lng":13.738206,
+    "unlocked": true
+  },{
+      "name":"Spot 2",
+      "lat":51.062534,
+      "lng":13.745782,
+      "unlocked": false
+    },{
+      "name":"Spot 3",
+      "lat":51.060029,
+      "lng":13.738269,
+      "unlocked": false
+    },{
+      "name":"Spot 4",
+      "lat":51.059700,
+      "lng":13.746277,
+      "unlocked": true
+    }
+  ]
+},
+  {
+    "name":"HTW Dresden",
+    "subtitle":"Neues Lehr- und Laborgebäude",
+    "description":"Auf dem Campus der HTW Dresden soll ein neues Lehr- und Laborgebäude entstehen. Der Neubau soll auf der bislang als Parkplatz genutzten Fläche auf dem Campus hinter dem Zentralgebäude entstehen und auf einer Nutzfläche von 8.220 Quadratmetern ein Baustofftechnikum mit Laboren für Betontechnologie, Geotechnik, Verkehrs- und Wasserbau, Lehrkabinette und den Werkstattbereich der Fakultät Gestaltung unterbringen. Darüber hinaus sind Büroarbeitsplätze für Drittmittbeschäftigte sowie PC-Pools für die Fakultät Informatik/Mathematik geplant. Das Bauvorhaben ist ein Pilotprojekt für die Anwendung von Kriterien des nachhaltigen Bauens im Hochschulbau Sachsens.",
+    "lat":51.037678,
+    "lng":13.736720,
+    "alt":-1.5,
+    "rot":340.0,
+    "scale":1.0,
+    "model":"building_2",
+    "texture":"building_texture_4k",
+    "unlocked": true,
+    "likes": 16,
+    "favorite": false,
     "children":[
       {
-        "name":"Testtitel 2",
-        "subtitle":"Untertitel",
-        "description":"Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores et ea rebum. Stet clita kasd gubergren, no sea takimata sanctus est Lorem ipsum dolor sit amet.",
-        "lat":51.053357,
-        "lng":13.736364,
-        "alt":-1.5,
-        "rot":0,
-        "scale":1.0,
-        "model":null,
-        "texture":null,
-        "unlocked": true,
-        "likes": 10,
-        "favorite": false
-
+        "name":"S-Gebäude",
+        "lat":51.036295,
+        "lng":13.735014,
+        "unlocked": true
       },
       {
-        "name":"Testtitel 3",
-        "subtitle":"Untertitel",
-        "description":"Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores et ea rebum. Stet clita kasd gubergren, no sea takimata sanctus est Lorem ipsum dolor sit amet.",
-        "lat":51.057209,
-        "lng":13.741736,
-        "alt":-1.5,
-        "rot":0,
-        "scale":1.0,
-        "model":"spot",
-        "texture":"spot_texture",
-        "unlocked": true,
-        "likes": 3,
-        "favorite": false
-
+        "name":"Bahnhof",
+        "lat":51.040031,
+        "lng":13.731848,
+        "unlocked": true
+      },
+      {
+        "name":"Kfz-Technik",
+        "lat":51.035084,
+        "lng":13.738758,
+        "unlocked": true
       }
     ]
   },
   {
-    "parent":{
-      "name":"spot2",
-      "subtitle":"Untertitel",
-      "description":"Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores et ea rebum. Stet clita kasd gubergren, no sea takimata sanctus est Lorem ipsum dolor sit amet.",
-      "lat":51.049733,
-      "lng":13.730287,
-      "alt":-1.5,
-      "rot":0,
-      "scale":1.0,
-      "model":"spot",
-      "texture":"spot_texture",
-      "unlocked": false,
-      "likes": 16,
-      "favorite": true
-
-    },
+    "name":"NEUSTÄDTER HAFEN",
+    "subtitle":"Planfeststellungsverfahren",
+    "description":"Entwicklung eines urbanen, gemischt genutzten Stadtquartiers mit einem hohen Anteil innerstädtischen Wohnens, ergänzt durch andere nicht störende Nutzungen wie Kultur und Freizeit, hafenbezogene Nutzungen, Gastronomie und Beherbergung, Dienstleistungen etc.\nSchaffung gesunder Wohn- und Arbeitsverhältnisse unter besonderer Berücksichtigung der Immissionsbelastung.",
+    "lat":51.065591,
+    "lng":13.732782,
+    "alt":-1.5,
+    "unlocked": false,
+    "likes": 25,
+    "favorite": false,
     "children":[
       {
-        "name":"HTW Dresden",
-        "subtitle":"Neues Lehr- und Laborgebäude",
-        "description":"Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores et ea rebum. Stet clita kasd gubergren, no sea takimata sanctus est Lorem ipsum dolor sit amet.",
-        "lat":51.037678,
-        "lng":13.736720,
-        "alt":-1.5,
-        "rot":320.0,
-        "scale":1.0,
-        "model":"building",
-        "texture":"building_texture_4k",
-        "unlocked": false,
-        "likes": 8,
-        "favorite": false
+        "name":"Spot 1",
+        "lat":51.069116,
+        "lng":13.738520,
+        "unlocked": false
+      },{
+        "name":"Spot 2",
+        "lat":51.069406,
+        "lng":13.732166,
+        "unlocked": false
+      },{
+        "name":"Spot 3",
+        "lat":51.063136,
+        "lng":13.732944,
+        "unlocked": true
       }
     ]
   }

@@ -12,7 +12,7 @@ out highp vec4 out_Colour;
 
 void main(void)
 {
-    mediump float AMBIENT_LIGHT = 0.2;
+    mediump float AMBIENT_LIGHT = 0.3;
     mediump float brightness = max(dot(normalize(surfaceNormal), normalize(cameraVector)), AMBIENT_LIGHT);
 
     if(useTexture)

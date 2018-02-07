@@ -1,7 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="colorPrimary">#f29d9b</color>
-    <color name="colorPrimaryDark">#7a373d</color>
-    <color name="colorAccent">#7a373d</color>
+    <color name="colorPrimary">#ffa291</color>
+    <color name="colorPrimaryDark">#721e2b</color>
+    <color name="colorAccent">#721e2b</color>
     <color name="transparentBG">#41000000</color>
+    <color name="lightGrey">#d6d6d6</color>
+    <color name="colorPrimaryDesaturated">#7e7e7e</color>
+    <color name="circleStrokeColor">#721e2b</color>
+    <color name="circleFillColor">#3d721e2b</color>
+
 </resources>

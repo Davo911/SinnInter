@@ -5,31 +5,34 @@ import android.content.Context;
 import android.content.res.Configuration;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.Canvas;
 import android.graphics.Color;
-import android.graphics.Matrix;
-import android.hardware.Sensor;
-import android.hardware.SensorEvent;
-import android.hardware.SensorEventListener;
-import android.hardware.SensorManager;
+import android.graphics.Paint;
+import android.graphics.PorterDuff;
+import android.graphics.PorterDuffColorFilter;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.design.widget.BottomSheetBehavior;
+import android.support.design.widget.TabLayout;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentTransaction;
+import android.support.v4.content.ContextCompat;
 import android.support.v4.view.ViewPager;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.MapView;
 import com.google.android.gms.maps.MapsInitializer;
-import com.google.android.gms.maps.model.BitmapDescriptor;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.CameraPosition;
+import com.google.android.gms.maps.model.Circle;
+import com.google.android.gms.maps.model.CircleOptions;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MapStyleOptions;
 import com.google.android.gms.maps.model.Marker;
@@ -53,9 +56,10 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import static android.content.ContentValues.TAG;
-import static android.content.Context.SENSOR_SERVICE;
 
+import biz.laenger.android.vpbs.ViewPagerBottomSheetBehavior;
+
+import static android.content.ContentValues.TAG;
 
 /**
  * A simple {@link Fragment} subclass.
@@ -65,47 +69,81 @@ import static android.content.Context.SENSOR_SERVICE;
  * Use the {@link MapFragment#newInstance} factory method to
  * create an instance of this fragment.
  */
-public class MapFragment extends Fragment implements
-        SensorEventListener
+public class MapFragment extends Fragment
 {
-    //sensordata:
-    private SensorManager sensorManager;
-    private Sensor sensorAccelerometer;
-    private Sensor sensorMagneticField;
-    private float[] valuesAccelerometer;
-    private float[] valuesMagneticField;
-    private float[] matrixR;
-    private float[] matrixI;
-    private float[] matrixValues;
-
     MapView mapView;
     GoogleMap googleMap;
     CameraPosition cameraPosition;
     OnFragmentInteractionListener mListener;
-    BottomSheetBehavior bottomSheetBehavior;
+    ViewPagerBottomSheetBehavior bottomSheetBehavior;
 
     LocationPagerFragment locationPagerFragment;
     CalendarFragment calendarFragment;
     ProfileFragment profileFragment;
+    boolean locationInfoDisplayed = true;
 
-    LinkedHashMap<String, Location> locations = new LinkedHashMap<>();
+    LinkedHashMap<String, LocationInfo> locations = new LinkedHashMap<>();
     ArrayList<Polyline> polyLines = new ArrayList<>();
 
-    Bitmap customMarkerBitmap;
-    Bitmap parentMarkerBitmap;
-    Bitmap myLocationBitmap;
+    Bitmap mainLocaitonBitmap;
+    Bitmap smallMainLocationBitmap;
+    Bitmap spotMarkerBitmap;
+    Bitmap inactiveSpotMarkerBitmap;
 
-    Marker myLocation;
+    Circle radius;
+    Circle userPosCenter, userPosRim;
 
-    class Location{
-        LatLng position;
-        String parent;
+    class LocationInfo
+    {
+        class ChildLocation
+        {
+            LatLng coords;
+            String title;
+            boolean unlocked = false;
+            Marker marker;
+
+            public ChildLocation(String name, double lat, double lng, boolean unlocked)
+            {
+                coords = new LatLng(lat, lng);
+                title =  name;
+                this.unlocked = unlocked;
+            }
+        }
+
+        LatLng coords;
+        String title, subtitle, description;
+
+        int likes = 0;
+        boolean favorite = false;
+        boolean notificationsEnabled = false;
+        ArrayList<ChildLocation> childLocations = new ArrayList<>();
+
         Marker marker;
 
-        private Location(LatLng position, String parent)
+        public LocationInfo(JSONObject obj) throws JSONException
         {
-            this.position = position;
-            this.parent = parent;
+            coords = new LatLng(obj.getDouble("lat"), obj.getDouble("lng"));
+            title = obj.getString("name");
+            subtitle = obj.getString("subtitle");
+            description = obj.getString("description");
+
+            if(obj.has("likes"))
+                likes = obj.getInt("likes");
+
+            favorite = obj.has("favorite") && obj.getBoolean("favorite");
+            notificationsEnabled = obj.has("notify") && obj.getBoolean("notify");
+
+            JSONArray children = obj.getJSONArray("children");
+            for (int i = 0; i < children.length(); i++)
+            {
+                JSONObject child = children.getJSONObject(i);
+                childLocations.add(new ChildLocation(
+                        child.getString("name"),
+                        child.getDouble("lat"),
+                        child.getDouble("lng"),
+                        child.getBoolean("unlocked")
+                ));
+            }
         }
     }
 
@@ -146,7 +184,6 @@ public class MapFragment extends Fragment implements
         @Override
         protected List<List<HashMap<String, String>>> doInBackground(String... jsonData)
         {
-
             JSONObject jObject;
             List<List<HashMap<String, String>>> routes = null;
 
@@ -171,38 +208,40 @@ public class MapFragment extends Fragment implements
             PolylineOptions lineOptions = null;
 
             // Traversing through all the routes
-            for (int i = 0; i < result.size(); i++)
+            if(result != null)
             {
-                points = new ArrayList<>();
-                lineOptions = new PolylineOptions();
-
-                // Fetching i-th route
-                List<HashMap<String, String>> path = result.get(i);
-
-                // Fetching all the points in i-th route
-                for (int j = 0; j < path.size(); j++)
+                for (int i = 0; i < result.size(); i++)
                 {
+                    points = new ArrayList<>();
+                    lineOptions = new PolylineOptions();
 
-                    if(i==0 && j == 0)
-                        j++;
+                    // Fetching i-th route
+                    List<HashMap<String, String>> path = result.get(i);
 
-                    if(i == (result.size() - 1) && j == (path.size() - 1))
-                        break;
+                    // Fetching all the points in i-th route
+                    for (int j = 0; j < path.size(); j++)
+                    {
 
+                        if (i == 0 && j == 0)
+                            j++;
 
-                    HashMap<String, String> point = path.get(j);
+                        if (i == (result.size() - 1) && j == (path.size() - 1))
+                            break;
 
-                    double lat = Double.parseDouble(point.get("lat"));
-                    double lng = Double.parseDouble(point.get("lng"));
-                    LatLng position = new LatLng(lat, lng);
+                        HashMap<String, String> point = path.get(j);
 
-                    points.add(position);
+                        double lat = Double.parseDouble(point.get("lat"));
+                        double lng = Double.parseDouble(point.get("lng"));
+                        LatLng position = new LatLng(lat, lng);
+
+                        points.add(position);
+                    }
+
+                    // Adding all the points in the route to LineOptions
+                    lineOptions.addAll(points);
+                    lineOptions.width(12);
+                    lineOptions.color(Color.WHITE);
                 }
-
-                // Adding all the points in the route to LineOptions
-                lineOptions.addAll(points);
-                lineOptions.width(12);
-                lineOptions.color(Color.WHITE);
             }
 
             // Drawing polyline in the Google Map for the i-th route
@@ -211,6 +250,7 @@ public class MapFragment extends Fragment implements
                 Polyline line = googleMap.addPolyline(lineOptions);
                 line.setStartCap(new RoundCap());
                 line.setEndCap(new RoundCap());
+                line.setColor(ContextCompat.getColor(getContext(), R.color.colorPrimaryDark));
                 polyLines.add(line);
             }
             else
@@ -326,32 +366,24 @@ public class MapFragment extends Fragment implements
     @Override
     public void onCreate(Bundle savedInstanceState)
     {
-        sensorManager = (SensorManager)getContext().getSystemService(SENSOR_SERVICE);
-        sensorAccelerometer = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
-        sensorMagneticField = sensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD);
-        valuesMagneticField = new float[3];
-        valuesAccelerometer = new float[3];
-        matrixR = new float[9];
-        matrixI = new float[9];
-        matrixValues = new float[3];
-
         Bitmap markerBitmap = BitmapFactory.decodeResource(getResources(),R.raw.si_marker);
-        customMarkerBitmap = Bitmap.createScaledBitmap(markerBitmap, 64, 64, false);
+
+        spotMarkerBitmap = tintImage(Bitmap.createScaledBitmap(markerBitmap, 64, 64, false),
+                ContextCompat.getColor(getContext(), R.color.colorPrimaryDark));
+
+        inactiveSpotMarkerBitmap = tintImage(Bitmap.createScaledBitmap(markerBitmap, 64, 64, false),
+                ContextCompat.getColor(getContext(), R.color.colorPrimaryDesaturated));
 
         Bitmap parentMarkerBitmap = BitmapFactory.decodeResource(getResources(), R.raw.si_spot);
-        this.parentMarkerBitmap = Bitmap.createScaledBitmap(parentMarkerBitmap, 128, 128, false);
 
-        Matrix matrix = new Matrix();
-        matrix.postRotate(-90);
-        Bitmap markerBitmap2 = BitmapFactory.decodeResource(getResources(), R.raw.si_gps_button);
-        myLocationBitmap = Bitmap.createScaledBitmap(
-                Bitmap.createBitmap(markerBitmap2, 0, 0, markerBitmap2.getWidth(), markerBitmap2.getHeight(), matrix, true),
-                100, 100, false);
+        mainLocaitonBitmap = tintImage(Bitmap.createScaledBitmap(parentMarkerBitmap, 128, 128, false),
+                ContextCompat.getColor(getContext(), R.color.colorPrimaryDark));
+
+        smallMainLocationBitmap = tintImage(Bitmap.createScaledBitmap(parentMarkerBitmap, 64, 64, false),
+                ContextCompat.getColor(getContext(), R.color.colorPrimaryDark));
 
         super.onCreate(savedInstanceState);
     }
-
-
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -359,6 +391,13 @@ public class MapFragment extends Fragment implements
     {
         // Inflate the layout for this fragment
         View view = inflater.inflate(R.layout.fragment_map, container, false);
+
+        TabLayout pageIndicator = (TabLayout)view.findViewById(R.id.pageIndicator);
+
+        if(locationPagerFragment == null)
+            locationPagerFragment = LocationPagerFragment.newInstance();
+
+        locationPagerFragment.setupTabLayout(pageIndicator);
 
         locationPagerFragment.addOnPageChangeListener(new ViewPager.OnPageChangeListener()
         {
@@ -371,6 +410,7 @@ public class MapFragment extends Fragment implements
             @Override
             public void onPageSelected(int position)
             {
+
                 if(googleMap != null)
                 {
                     for (Polyline line : polyLines)
@@ -383,32 +423,46 @@ public class MapFragment extends Fragment implements
                     if (f.getView() == null)
                         return;
 
-                    String title = ((TextView) (f.getView().findViewById(R.id.title))).getText().toString();
-                    String parent = locations.get(title).parent;
-                    if (parent == null)
-                        parent = title;
-
-                    //draw new directions and update markers
-                    for (Map.Entry<String, Location> location : locations.entrySet())
+                    //reset all markers first
+                    for (Map.Entry<String, LocationInfo> mapEntry : locations.entrySet())
                     {
-                        if (location.getValue().parent != null &&
-                                location.getValue().parent.equals(parent))
-                        {
-                            new FetchUrl().execute(buildUrl(location.getValue().position,
-                                    locations.get(location.getValue().parent).position));
+                        LocationInfo loc = mapEntry.getValue();
 
-                            locations.get(location.getValue().parent).marker.setIcon(
-                                    BitmapDescriptorFactory.fromBitmap(parentMarkerBitmap));
-                            locations.get(location.getValue().parent).marker.setAnchor(0.5f, 0.9f);
-                        } else
+                        loc.marker.setIcon(BitmapDescriptorFactory.fromBitmap(smallMainLocationBitmap));
+                        loc.marker.setAnchor(0.5f, 0.5f);
+
+                        for(LocationInfo.ChildLocation child : loc.childLocations)
                         {
-                            location.getValue().marker.setIcon(
-                                    BitmapDescriptorFactory.fromBitmap(customMarkerBitmap));
-                            location.getValue().marker.setAnchor(0.5f, 0.5f);
+                            child.marker.setVisible(false);
                         }
                     }
+
+                    String title = ((TextView) (f.getView().findViewById(R.id.title))).getText().toString();
+                    LocationInfo location = locations.get(title);
+
+                    for(LocationInfo.ChildLocation child : location.childLocations)
+                    {
+                        if(child.unlocked)
+                            child.marker.setIcon(BitmapDescriptorFactory.fromBitmap(spotMarkerBitmap));
+                        else
+                            child.marker.setIcon(BitmapDescriptorFactory.fromBitmap(inactiveSpotMarkerBitmap));
+
+                        child.marker.setVisible(true);
+                        new FetchUrl().execute(buildUrl(child.coords, location.coords));
+                    }
+
+                    location.marker.setIcon(BitmapDescriptorFactory.fromBitmap(mainLocaitonBitmap));
+                    location.marker.setAnchor(0.5f, 0.9f);
+
+                    cameraPosition = new CameraPosition.Builder()
+                            .target(location.marker.getPosition())
+                            .zoom(cameraPosition.zoom)
+                            .build();
+                    animateCamera();
+
                 }
             }
+
 
             @Override
             public void onPageScrollStateChanged(int state)
@@ -418,18 +472,31 @@ public class MapFragment extends Fragment implements
         });
 
         final View bottomSheet = view.findViewById(R.id.bottom_sheet);
-        bottomSheetBehavior = BottomSheetBehavior.from(bottomSheet);
-        bottomSheetBehavior.setBottomSheetCallback(new BottomSheetBehavior.BottomSheetCallback(){
+        bottomSheetBehavior = ViewPagerBottomSheetBehavior.from(bottomSheet);
+        bottomSheetBehavior.setBottomSheetCallback(new ViewPagerBottomSheetBehavior.BottomSheetCallback(){
             @Override
             public void onStateChanged(View bottomSheet, int newState)
             {
+
+                if(newState  == BottomSheetBehavior.STATE_DRAGGING ||
+                        newState  == BottomSheetBehavior.STATE_SETTLING )
+                {
+                    getView().findViewById(R.id.imageView).animate().alpha(0f).setDuration(250);
+                    getView().findViewById(R.id.pageIndicator).animate().alpha(0f).setDuration(250);
+
+                }
                 if (newState == BottomSheetBehavior.STATE_EXPANDED)
                 {
-                    locationPagerFragment.setCollapsed();
+                    locationPagerFragment.setExpanded();
                 }
                 else if (newState == BottomSheetBehavior.STATE_COLLAPSED)
                 {
-                    locationPagerFragment.setExpanded();
+                    locationPagerFragment.setCollapsed();
+                    getView().findViewById(R.id.imageView).animate().alpha(1f).setDuration(250);
+                    getView().findViewById(R.id.pageIndicator).animate().alpha(1f).setDuration(250);
+                    if(!locationInfoDisplayed)
+                        displayLocationInfo();
+
                 }
                 else if (newState == BottomSheetBehavior.STATE_HIDDEN)
                 {
@@ -459,27 +526,51 @@ public class MapFragment extends Fragment implements
 
             googleMap.setIndoorEnabled(false);
             googleMap.getUiSettings().setCompassEnabled(false);
+            googleMap.setPadding(0, 0, 0, bottomSheetBehavior.getPeekHeight());
+            radius = googleMap.addCircle(new CircleOptions()
+                    .center(new LatLng(0,90))
+                    .radius(150)
+                    .strokeColor(getResources().getColor(R.color.circleStrokeColor))
+                    .strokeWidth(3f)
+                    .fillColor(getResources().getColor(R.color.circleFillColor)));
+            userPosCenter = googleMap.addCircle(new CircleOptions()
+                    .center(new LatLng(0,90))
+                    .radius(8)
+                    .strokeColor(getResources().getColor(R.color.circleStrokeColor))
+                    .strokeWidth(3f)
+                    .fillColor(getResources().getColor(R.color.circleStrokeColor)));
+            userPosRim = googleMap.addCircle(new CircleOptions()
+                    .center(new LatLng(0,90))
+                    .radius(35)
+                    .strokeColor(getResources().getColor(R.color.circleStrokeColor))
+                    .strokeWidth(11f));
 
-            myLocation = googleMap.addMarker(new MarkerOptions()
-                    .position(new LatLng(90,0))
-                    .title("myLocation")
-                    .icon(BitmapDescriptorFactory.fromBitmap(myLocationBitmap))
-                    .anchor(0.5f, 0.5f)
-                    .visible(false)
-                    .flat(true));
-
-            for (Map.Entry<String, Location> location : locations.entrySet())
+            for (Map.Entry<String, LocationInfo> mapEntry : locations.entrySet())
             {
-                location.getValue().marker = googleMap.addMarker(new MarkerOptions()
-                        .position(location.getValue().position)
-                        .title(location.getKey())
-                        .icon(BitmapDescriptorFactory.fromBitmap(customMarkerBitmap))
+                LocationInfo loc = mapEntry.getValue();
+
+                loc.marker = googleMap.addMarker(new MarkerOptions()
+                        .position(loc.coords)
+                        .title(loc.title)
+                        .icon(BitmapDescriptorFactory.fromBitmap(smallMainLocationBitmap))
                         .anchor(0.5f, 0.5f)
-                        .draggable(true));
+                        .draggable(false));
+
+                for(LocationInfo.ChildLocation child : loc.childLocations)
+                {
+                    child.marker = googleMap.addMarker(new MarkerOptions()
+                            .position(child.coords)
+                            .title(child.title)
+                            .icon(BitmapDescriptorFactory.fromBitmap(spotMarkerBitmap))
+                            .anchor(0.5f, 0.5f)
+                            .draggable(false)
+                            .visible(false));
+                }
             }
 
             googleMap.setOnMarkerClickListener(marker ->
             {
+                locationPagerFragment.setActive(marker.getTitle());
                 mListener.onActiveMarkerChanged(marker.getTitle());
 
                 return false;
@@ -502,12 +593,12 @@ public class MapFragment extends Fragment implements
                 @Override
                 public void onMarkerDragEnd(Marker marker)
                 {
-                    mListener.onMarkerPositionChanged(marker.getTitle(), marker.getPosition());
-                    locations.get(marker.getTitle()).position = marker.getPosition();
+                    //mListener.onMarkerPositionChanged(marker.getTitle(), marker.getPosition());
+                    //locations.get(marker.getTitle()).coords = marker.getPosition();
                 }
             });
 
-            // For zooming automatically to the location of the marker when the map has loaded
+            // For zooming automatically to the coords of the marker when the map has loaded
             if(cameraPosition != null)
             {
                 googleMap.moveCamera(CameraUpdateFactory.newCameraPosition(cameraPosition));
@@ -516,8 +607,20 @@ public class MapFragment extends Fragment implements
             {
                 googleMap.setOnMapLoadedCallback(() ->
                 {
-                    cameraPosition = new CameraPosition.Builder().target(new LatLng(51.050862, 13.733363)).zoom(13f).build();
-                    googleMap.animateCamera(CameraUpdateFactory.newCameraPosition(cameraPosition));
+                    if(!locationPagerFragment.locationCards.isEmpty())
+                    {
+                        cameraPosition = new CameraPosition.Builder()
+                                .target(locationPagerFragment.locationCards.get(0).locationInfo.coords)
+                                .zoom(15f)
+                                .build();
+                    }
+                    else
+                    {
+                        cameraPosition = new CameraPosition.Builder()
+                                .target(new LatLng(51.050862, 13.733363))
+                                .zoom(15f)
+                                .build();
+                    }
                 });
             }
         });
@@ -538,6 +641,7 @@ public class MapFragment extends Fragment implements
         return "https://maps.googleapis.com/maps/api/directions/json?origin=" +
                 start.latitude + "," + start.longitude + "&destination=" +
                 end.latitude + "," + end.longitude  +
+                "&mode=walking" +
                 "&key=" + getString(R.string.google_maps_direction_request_key);
     }
 
@@ -580,19 +684,29 @@ public class MapFragment extends Fragment implements
         return data;
     }
 
-    public void addLocation(String title, String subtitle, String description, LatLng position, String parent)
+    public void addLocation(JSONObject location) throws JSONException
     {
-        locations.put(title, new Location(position, parent));
+        LocationInfo loc = new LocationInfo(location);
+        locations.put(loc.title, loc);
 
         if(googleMap != null)
         {
-            googleMap.addMarker(new MarkerOptions()
-                    .position(position)
-                    .title(title)
+            loc.marker = googleMap.addMarker(new MarkerOptions()
+                    .position(loc.coords)
+                    .title(loc.title)
                     .draggable(true));
+
+            for(LocationInfo.ChildLocation child : loc.childLocations)
+            {
+                child.marker = googleMap.addMarker(new MarkerOptions()
+                        .position(child.coords)
+                        .title(child.title)
+                        .draggable(false));
+            }
+
         }
 
-        locationPagerFragment.addLocation(title, subtitle, description, position, parent);
+        locationPagerFragment.addLocation(loc);
     }
 
     @Override
@@ -609,21 +723,14 @@ public class MapFragment extends Fragment implements
 
     @Override
     public void onResume() {
-        sensorManager.registerListener(this, sensorAccelerometer, SensorManager.SENSOR_DELAY_NORMAL);
-        sensorManager.registerListener(this, sensorMagneticField, SensorManager.SENSOR_DELAY_NORMAL);
-
         super.onResume();
         mapView.onResume();
     }
 
     @Override
     public void onPause() {
-
         if(googleMap != null)
             cameraPosition = googleMap.getCameraPosition();
-
-        sensorManager.unregisterListener(this, sensorAccelerometer);
-        sensorManager.unregisterListener(this, sensorMagneticField);
 
         super.onPause();
         mapView.onPause();
@@ -686,21 +793,14 @@ public class MapFragment extends Fragment implements
         mListener = null;
     }
 
-    @SuppressLint("MissingPermission")
-    public void enableUserLocation()
-    {
-
-        if(myLocation != null)
-        {
-            myLocation.setVisible(true);
-        }
-    }
-
     public void updateMyLocation(android.location.Location location)
     {
-        if(myLocation != null)
+        if(userPosCenter != null)
         {
-            myLocation.setPosition(new LatLng(location.getLatitude(), location.getLongitude()));
+            LatLng newPosition = new LatLng(location.getLatitude(), location.getLongitude());
+            radius.setCenter(newPosition);
+            userPosCenter.setCenter(newPosition);
+            userPosRim.setCenter(newPosition);
         }
     }
 
@@ -713,8 +813,19 @@ public class MapFragment extends Fragment implements
         fragmentTransaction.replace(R.id.fragment_container, locationPagerFragment);
         fragmentTransaction.commit();
 
+        View view = getView();
+        if(view != null)
+        {
+            TabLayout pageIndicator = (TabLayout)view.findViewById(R.id.pageIndicator);
+            pageIndicator.setVisibility(View.VISIBLE);
+
+            ImageView imageview = (ImageView)view.findViewById(R.id.imageView);
+            imageview.setVisibility(View.VISIBLE);
+        }
+
         getChildFragmentManager().executePendingTransactions();
         bottomSheetBehavior.setState(BottomSheetBehavior.STATE_COLLAPSED);
+        locationInfoDisplayed = true;
     }
 
     public void displayCalendar()
@@ -726,8 +837,19 @@ public class MapFragment extends Fragment implements
         fragmentTransaction.replace(R.id.fragment_container, calendarFragment);
         fragmentTransaction.commit();
 
+        View view = getView();
+        if(view != null)
+        {
+            TabLayout pageIndicator = (TabLayout)view.findViewById(R.id.pageIndicator);
+            pageIndicator.setVisibility(View.INVISIBLE);
+
+            ImageView imageview = (ImageView)view.findViewById(R.id.imageView);
+            imageview.setVisibility(View.INVISIBLE);
+        }
+
         getChildFragmentManager().executePendingTransactions();
         bottomSheetBehavior.setState(BottomSheetBehavior.STATE_EXPANDED);
+        locationInfoDisplayed = false;
     }
 
     public void displayProfile()
@@ -739,51 +861,49 @@ public class MapFragment extends Fragment implements
         fragmentTransaction.replace(R.id.fragment_container, profileFragment);
         fragmentTransaction.commit();
 
+        View view = getView();
+        if(view != null)
+        {
+            TabLayout pageIndicator = (TabLayout)view.findViewById(R.id.pageIndicator);
+            pageIndicator.setVisibility(View.INVISIBLE);
+
+            ImageView imageview = (ImageView)view.findViewById(R.id.imageView);
+            imageview.setVisibility(View.INVISIBLE);
+        }
+
         getChildFragmentManager().executePendingTransactions();
         bottomSheetBehavior.setState(BottomSheetBehavior.STATE_EXPANDED);
+        locationInfoDisplayed = false;
     }
 
-    //SENSOR EVENTS
-    @Override
-    public void onSensorChanged(SensorEvent event)
+    public static Bitmap tintImage(Bitmap bitmap, int color)
     {
-        switch(event.sensor.getType())
-        {
-            case Sensor.TYPE_ACCELEROMETER:
-                for ( int i = 0; i < event.values.length; i++ )
-                {
-                    valuesAccelerometer[i] = valuesAccelerometer[i] + 0.5f * (event.values[i] - valuesAccelerometer[i]);
-                }
-                break;
-            case Sensor.TYPE_MAGNETIC_FIELD:
-                for ( int i = 0; i < event.values.length; i++ )
-                {
-                    valuesMagneticField[i] = valuesMagneticField[i] + 0.5f * (event.values[i] - valuesMagneticField[i]);
-                }
-                break;
-        }
+        Paint paint = new Paint();
+        paint.setColorFilter(new PorterDuffColorFilter(color, PorterDuff.Mode.SRC_IN));
+        Bitmap bitmapResult = Bitmap.createBitmap(bitmap.getWidth(), bitmap.getHeight(), Bitmap.Config.ARGB_8888);
+        Canvas canvas = new Canvas(bitmapResult);
+        canvas.drawBitmap(bitmap, 0, 0, paint);
+        return bitmapResult;
+    }
 
-        if(valuesAccelerometer != null && valuesMagneticField != null)
-        {
-            boolean success = SensorManager.getRotationMatrix(matrixR, matrixI,
-                    valuesAccelerometer, valuesMagneticField);
+    public void animateCamera()
+    {
+        if(googleMap != null)
+            googleMap.animateCamera(CameraUpdateFactory.newCameraPosition(cameraPosition));
+    }
 
-            if (success)
+    public boolean unlockSpot()
+    {
+        if(userPosCenter != null)
+        {
+            LocationInfo.ChildLocation unlockedLocation = locationPagerFragment.unlock(userPosCenter.getCenter());
+            if(unlockedLocation != null)
             {
-                SensorManager.getOrientation(matrixR, matrixValues);
-
-                if (myLocation != null)
-                {
-                    myLocation.setRotation((float)Math.toDegrees(matrixValues[0]) + 55f);
-                }
+                unlockedLocation.marker.setIcon(BitmapDescriptorFactory.fromBitmap(spotMarkerBitmap));
+                return true;
             }
         }
-    }
-
-    @Override
-    public void onAccuracyChanged(Sensor sensor, int accuracy)
-    {
-
+        return false;
     }
 
     /**
@@ -801,4 +921,5 @@ public class MapFragment extends Fragment implements
         void onMarkerPositionChanged(String name, LatLng position);
         void onActiveMarkerChanged(String name);
     }
+
 }

@@ -5,21 +5,12 @@
     android:id="@+id/locationInfo"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@android:color/white"
     android:orientation="vertical">
 
     <android.support.v4.view.ViewPager
         android:id="@+id/viewPager"
         android:layout_width="match_parent"
-        android:layout_height="550dp" />
-
-    <android.support.design.widget.TabLayout
-        android:id="@+id/dots"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        app:tabBackground="@drawable/tab_selector"
-        app:tabGravity="center"
-        app:tabIndicatorHeight="0dp"
-        app:tabMaxWidth="12dp" />
+        android:layout_height="match_parent"
+        android:nestedScrollingEnabled="true" />
 
 </LinearLayout>

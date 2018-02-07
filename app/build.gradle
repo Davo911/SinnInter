@@ -24,6 +24,10 @@ android {
     buildToolsVersion '26.0.2'
 }
 
+repositories {
+    maven { url "https://raw.github.com/laenger/maven-releases/master/releases" }
+}
+
 dependencies {
     implementation fileTree(include: ['*.jar'], dir: 'libs')
     implementation 'com.android.support:appcompat-v7:26.1.0'
@@ -35,4 +39,5 @@ dependencies {
     androidTestImplementation 'com.android.support.test.espresso:espresso-core:3.0.1'
     compile 'com.google.android.gms:play-services-location:11.8.0'
     compile 'com.google.android.gms:play-services-maps:11.8.0'
+    compile "biz.laenger.android:vpbs:0.0.4"
 }

@@ -72,28 +72,30 @@ public class ArGLSurfaceView extends GLSurfaceView
         if(e.getAction() == MotionEvent.ACTION_DOWN ||
                 (e.getAction() == MotionEvent.ACTION_MOVE && e.getPointerCount() == 1))
         {
-            float[] ray = screenCoordsToRay(e.getX(), e.getY());
-
-            //assume the phone is held 1.5m above ground
-            float x = 1.5f / ray[1];
-
-            if (currentLocation != null)
+            if (false)  // -true- for debug
             {
-                if (!arObjects.isEmpty())
+                float[] ray = screenCoordsToRay(e.getX(), e.getY());
+
+                //assume the phone is held 1.5m above ground
+                float x = 1.5f / ray[1];
+
+                if (currentLocation != null)
                 {
-                    arObjects.get(0).setPosition(currentLocation.latitude + ray[0] * x / 111111.1,
-                            currentLocation.longitude + ray[2] * x / (111111.1 * Math.cos(currentLocation.latitude)),
-                            -1.5);
+                    if (!arObjects.isEmpty())
+                    {
+                        arObjects.get(0).setPosition(currentLocation.latitude + ray[0] * x / 111111.1,
+                                currentLocation.longitude + ray[2] * x / (111111.1 * Math.cos(currentLocation.latitude)),
+                                -1.5);
+                    }
                 }
             }
-        }
 
-        if(e.getPointerCount() > 1)
-        {
-            if (!arObjects.isEmpty())
-                arObjects.get(0).rotation += 1f;
+            if (e.getPointerCount() > 1)
+            {
+                if (!arObjects.isEmpty())
+                    arObjects.get(0).rotation += 1f;
+            }
         }
-
         return true;
     }
 

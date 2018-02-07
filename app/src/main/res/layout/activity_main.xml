@@ -28,13 +28,14 @@
         <android.support.constraint.ConstraintLayout
             android:id="@+id/buttonContainer"
             android:layout_width="match_parent"
-            android:layout_height="match_parent">
+            android:layout_height="match_parent"
+            android:background="@android:color/transparent">
 
             <ImageView
                 android:id="@+id/menuBackground"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="8dp"
+                android:layout_marginStart="10dp"
                 android:scaleType="fitStart"
                 android:tint="@android:color/white"
                 app:layout_constraintBottom_toBottomOf="@+id/hamburgerButton"
@@ -44,59 +45,96 @@
                 app:layout_constraintTop_toTopOf="@+id/hamburgerButton"
                 app:srcCompat="@drawable/si_menu_background" />
 
-            <ImageButton
-                android:id="@+id/hamburgerButton"
+            <ImageView
+                android:id="@+id/menuBackgroundR"
                 android:layout_width="58dp"
                 android:layout_height="58dp"
-                android:layout_marginStart="6dp"
-                android:layout_marginTop="32dp"
+                android:layout_marginEnd="8dp"
+                android:scaleType="fitStart"
+                android:tint="@android:color/white"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toTopOf="@+id/hamburgerButton"
+                app:srcCompat="@drawable/si_menu_background" />
+
+
+            <ImageButton
+                android:id="@+id/hamburgerButton"
+                android:layout_width="56dp"
+                android:layout_height="56dp"
+                android:layout_marginStart="9dp"
+                android:layout_marginTop="33dp"
                 android:background="?android:selectableItemBackgroundBorderless"
                 android:scaleType="fitCenter"
+                android:tint="@android:color/white"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toTopOf="parent"
-                app:srcCompat="@drawable/si_menu"
-                android:tint="@android:color/white"/>
+                app:srcCompat="@drawable/si_menu" />
 
             <ImageButton
                 android:id="@+id/mapButton"
-                android:layout_width="58dp"
-                android:layout_height="58dp"
+                android:layout_width="56dp"
+                android:layout_height="56dp"
                 android:layout_marginStart="8dp"
                 android:background="?android:selectableItemBackgroundBorderless"
                 android:scaleType="fitCenter"
+                android:tint="@android:color/white"
                 android:visibility="invisible"
                 app:layout_constraintStart_toEndOf="@+id/hamburgerButton"
                 app:layout_constraintTop_toTopOf="@+id/hamburgerButton"
-                app:srcCompat="@drawable/si_karte"
-                android:tint="@android:color/white" />
+                app:srcCompat="@drawable/si_karte" />
 
             <ImageButton
                 android:id="@+id/calendarButton"
-                android:layout_width="58dp"
-                android:layout_height="58dp"
+                android:layout_width="56dp"
+                android:layout_height="56dp"
                 android:layout_marginStart="8dp"
                 android:background="?android:selectableItemBackgroundBorderless"
                 android:scaleType="fitCenter"
+                android:tint="@android:color/white"
                 android:visibility="invisible"
                 app:layout_constraintStart_toEndOf="@+id/mapButton"
                 app:layout_constraintTop_toTopOf="@+id/hamburgerButton"
-                app:srcCompat="@drawable/si_geschichte_kalender"
-                android:tint="@android:color/white" />
+                app:srcCompat="@drawable/si_geschichte_kalender" />
 
             <ImageButton
                 android:id="@+id/profileButton"
-                android:layout_width="58dp"
-                android:layout_height="58dp"
+                android:layout_width="56dp"
+                android:layout_height="56dp"
                 android:layout_marginStart="8dp"
                 android:background="?android:selectableItemBackgroundBorderless"
                 android:scaleType="fitCenter"
+                android:tint="@android:color/white"
                 android:visibility="invisible"
                 app:layout_constraintStart_toEndOf="@+id/calendarButton"
                 app:layout_constraintTop_toTopOf="@+id/hamburgerButton"
-                app:srcCompat="@drawable/si_architekt_profil"
-                android:tint="@android:color/white" />
+                app:srcCompat="@drawable/si_architekt_profil" />
+
+            <ImageButton
+                android:id="@+id/arButton"
+                android:layout_width="56dp"
+                android:layout_height="56dp"
+                android:layout_marginBottom="8dp"
+                android:layout_marginEnd="8dp"
+                android:layout_marginStart="8dp"
+                android:layout_marginTop="8dp"
+                android:adjustViewBounds="true"
+                android:background="?android:attr/selectableItemBackgroundBorderless"
+                android:scaleType="centerCrop"
+                android:tint="@android:color/white"
+                app:layout_constraintBottom_toBottomOf="@+id/menuBackgroundR"
+                app:layout_constraintEnd_toEndOf="@+id/menuBackgroundR"
+                app:layout_constraintStart_toStartOf="@+id/menuBackgroundR"
+                app:layout_constraintTop_toTopOf="@+id/menuBackgroundR"
+                app:srcCompat="@drawable/si_gps_button" />
 
         </android.support.constraint.ConstraintLayout>
     </RelativeLayout>
+
+    <FrameLayout
+        android:id="@+id/login_container"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+    </FrameLayout>
 
 </android.support.design.widget.CoordinatorLayout>
